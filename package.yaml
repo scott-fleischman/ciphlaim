@@ -6,7 +6,7 @@ dependencies:
   - bytestring
   - containers
   - generic-lens
-  - lens
+  - optics
   - text
   - vector
   - vty

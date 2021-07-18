@@ -1,7 +1,7 @@
 module Ciphlaim where
 
-import Control.Lens ((^.))
-import qualified Control.Lens as Lens
+import Optics ((^.))
+import qualified Optics
 import Data.Generics.Labels ()
 import GHC.Generics (Generic)
 import Graphics.Vty (Vty)
@@ -32,10 +32,10 @@ makePicture State {selectedLine, windowSize} =
 updateState :: Vty.Event -> State -> Maybe State
 updateState =
   \case
-    Vty.EvKey Vty.KUp _ -> Just . Lens.over #selectedLine (\x -> (x - 1) `mod` 2)
-    Vty.EvKey Vty.KDown _ -> Just . Lens.over #selectedLine (\x -> (x + 1) `mod` 2)
+    Vty.EvKey Vty.KUp _ -> Just . Optics.over #selectedLine (\x -> (x - 1) `mod` 2)
+    Vty.EvKey Vty.KDown _ -> Just . Optics.over #selectedLine (\x -> (x + 1) `mod` 2)
     Vty.EvKey Vty.KEsc _ -> \_ -> Nothing
-    Vty.EvResize width height -> Just . Lens.set #windowSize WindowSize {width, height}
+    Vty.EvResize width height -> Just . Optics.set #windowSize WindowSize {width, height}
     _ -> \_ -> Nothing
 
 loop :: Vty -> State -> IO Vty.Event
