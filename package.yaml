@@ -16,6 +16,7 @@ ghc-options:
 
 default-extensions:
   - LambdaCase
+  - OverloadedLabels
   # GHC2021
   - BangPatterns
   - BinaryLiterals
