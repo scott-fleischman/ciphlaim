@@ -7,7 +7,7 @@ dependencies:
   - bytestring
   - containers
   - generic-lens
-  - optics
+  - lens
   - text
   - vector
   - vty
@@ -16,8 +16,10 @@ ghc-options:
   - -Wall
 
 default-extensions:
+  - BlockArguments
   - LambdaCase
   - OverloadedLabels
+
   # GHC2021
   - BangPatterns
   - BinaryLiterals
