@@ -2,3 +2,4 @@ resolver: nightly-2021-07-18
 extra-deps:
   - generic-lens-2.2.0.0
   - generic-lens-core-2.2.0.0
+  - network-3.0.1.1

@@ -1,0 +1,97 @@
+cabal-version: 2.2
+
+name: ciphlaim
+version: 1.0
+build-type: Simple
+
+common options
+  default-language: Haskell2010
+
+  build-depends:
+      base
+    , brick
+    , bytestring
+    , containers
+    , generic-lens
+    , lens
+    , text
+    , vector
+    , vty
+
+  ghc-options:
+    -Wall
+
+  default-extensions:
+    BlockArguments
+    DerivingStrategies
+    DuplicateRecordFields
+    LambdaCase
+    OverloadedLabels
+    OverloadedStrings
+
+    -- GHC2021
+    BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    EmptyCase
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
+    FlexibleContexts
+    FlexibleInstances
+    GADTSyntax
+    GeneralisedNewtypeDeriving
+    HexFloatLiterals
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NamedWildCards
+    NumericUnderscores
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TupleSections
+    TypeApplications
+    TypeOperators
+    TypeSynonymInstances
+
+library
+  import: options
+  exposed-modules:
+      Ciphlaim
+      Ciphlaim.Integer
+  hs-source-dirs:
+      library
+
+executable ciphlaim
+  import: options
+  main-is: Main.hs
+  hs-source-dirs:
+      executable
+  ghc-options:
+      -threaded
+  build-depends:
+      ciphlaim
+
+executable ciphlaim-test
+  import: options
+  main-is: Main.hs
+  hs-source-dirs:
+      test
+  ghc-options:
+      -threaded
+  build-depends:
+      ciphlaim
+    , sandwich
