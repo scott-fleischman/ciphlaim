@@ -1,7 +1,8 @@
 module Ciphlaim.Integer where
 
-import qualified Control.Lens as Lens
+import Control.Lens ((^.))
 import Data.Generics.Labels ()
+import Data.Text (Text)
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import qualified Data.List as List
@@ -25,9 +26,9 @@ createOr i value xs =
 
 -- | Increase the size of the Fin without changing its value
 increaseSize :: FinSize -> Fin -> Fin
-increaseSize FinSize {size = extra} Fin {size, value} =
+increaseSize FinSize {size = increase} Fin {size, value} =
   Fin
-    { size = size + extra
+    { size = size + increase
     , value
     }
 
@@ -36,11 +37,33 @@ increaseValue :: FinSize -> Fin -> Fin
 increaseValue FinSize {size = increase} Fin {size, value} =
   Fin
     { size = size + increase
-    , value = increase + value
+    , value = value + increase
     }
 
 orSize :: [FinSize] -> FinSize
 orSize = sum
 
 orSizeFin :: [Fin] -> FinSize
-orSizeFin = orSize . fmap (FinSize . Lens.view #size)
+orSizeFin = orSize . fmap (FinSize . (^. #size))
+
+splitOr :: [FinSize] -> Fin -> Either Text (Int, Natural)
+splitOr sizes Fin {size, value} =
+  if FinSize size /= orSize sizes
+    then Left "Input size mismatch"
+    else
+      let (_finalSize, index, maybeResult) = foldr go (0, length sizes, Nothing) sizes
+      in case maybeResult of
+        Nothing -> Left "Unable to split"
+        Just result -> Right (index, result)
+  where
+  go :: FinSize -> (FinSize, Int, Maybe Natural) -> (FinSize, Int, Maybe Natural)
+  go _ result@(_, _, Just _) = result -- keep same if found answer
+  go currentSize (sumSize, index, Nothing) =
+    let newSize = sumSize + currentSize
+        newSizeNat = newSize ^. #size
+        sumSizeNat = sumSize ^. #size
+        newResult =
+          if value < newSizeNat && value >= sumSizeNat
+            then Just (value - sumSizeNat)
+            else Nothing
+    in (newSize, index - 1, newResult)
