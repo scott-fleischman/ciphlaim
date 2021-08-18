@@ -85,8 +85,9 @@ executable ciphlaim
   build-depends:
       ciphlaim
 
-executable ciphlaim-test
+test-suite test
   import: options
+  type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs:
       test
@@ -94,4 +95,3 @@ executable ciphlaim-test
       -threaded
   build-depends:
       ciphlaim
-    , sandwich

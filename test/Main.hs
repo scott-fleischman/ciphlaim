@@ -2,13 +2,14 @@
 
 module Main where
 
+import Control.Monad (when)
 import Ciphlaim.Integer
 import Control.Lens ((^.))
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import GHC.Generics (Generic)
-import Test.Sandwich
+import System.Exit (exitFailure)
 
 data OrAssoc = OrAssoc
   { fin :: Fin
@@ -17,6 +18,18 @@ data OrAssoc = OrAssoc
   , dir :: IndexDirection
   }
   deriving stock (Generic, Eq, Show)
+
+shouldBe :: (Eq a, Show a) => a -> a -> IO ()
+shouldBe actual expected = do
+  when (actual /= expected) do
+    putStrLn "Check failure"
+    putStrLn "*** Expected:"
+    print expected
+    putStrLn ""
+    putStrLn "*** Actual:"
+    print actual
+
+    exitFailure
 
 orAssocs :: Vector OrAssoc
 orAssocs =
@@ -58,8 +71,8 @@ orAssocs =
   , OrAssoc Fin {size=9, value=8} OrRef {index=0, value=3} [4,2,3] HigherIndexFirst
   ]
 
-top :: TopSpec
-top = do
+main :: IO ()
+main = do
   let makeLabel OrAssoc {fin, orRef, sizes, dir}
         = show dir
         <> " " <> show sizes
@@ -67,16 +80,17 @@ top = do
         <> " (i:" <> show (orRef ^. #index)
         <> ",v:" <> show (orRef ^. #value)
         <> ")"
-  describe "createOr" $ do
-    Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
-      it
-        ("createOr " <> makeLabel orAssoc)
-        (createOr dir orRef sizes `shouldBe` Right fin)
-  describe "splitOr" $ do
-    Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
-      it
-        ("splitOr " <> makeLabel orAssoc)
-        (splitOr dir sizes fin `shouldBe` Right orRef)
 
-main :: IO ()
-main = runSandwichWithCommandLineArgs defaultOptions top
+  putStrLn "createOr"
+  putStrLn ""
+  Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
+    do
+      putStrLn ("createOr " <> makeLabel orAssoc)
+      createOr dir orRef sizes `shouldBe` Right fin
+
+  putStrLn "splitOr"
+  putStrLn ""
+  Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
+    do
+      putStrLn ("splitOr " <> makeLabel orAssoc)
+      splitOr dir sizes fin `shouldBe` Right orRef

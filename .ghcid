@@ -1,3 +1,3 @@
--c "stack ghci --main-is ciphlaim:exe:ciphlaim-test"
+-c "stack ghci --main-is ciphlaim:test:test"
 --test Main.main
 --setup ":set args --print"
