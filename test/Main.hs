@@ -9,7 +9,7 @@ import Data.Generics.Labels ()
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import GHC.Generics (Generic)
-import System.Exit (exitFailure)
+import System.Exit (die)
 
 data OrAssoc = OrAssoc
   { fin :: Fin
@@ -22,14 +22,13 @@ data OrAssoc = OrAssoc
 shouldBe :: (Eq a, Show a) => a -> a -> IO ()
 shouldBe actual expected = do
   when (actual /= expected) do
-    putStrLn "Check failure"
-    putStrLn "*** Expected:"
-    print expected
-    putStrLn ""
-    putStrLn "*** Actual:"
-    print actual
-
-    exitFailure
+    let message =
+          "*** Expected:\n"
+          <> show expected <> "\n"
+          <> "\n"
+          <> "*** Actual:\n"
+          <> show actual <> "\n"
+    die message
 
 orAssocs :: Vector OrAssoc
 orAssocs =
