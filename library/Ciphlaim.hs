@@ -1,12 +1,12 @@
 module Ciphlaim where
 
 import Brick (App(..))
-import qualified Brick
+import Brick qualified
+import Brick.Widgets.Border qualified as Border
+import Brick.Widgets.Border.Style qualified as Border.Style
 import Control.Lens.Operators
 import Data.Generics.Labels ()
-import qualified Graphics.Vty as Vty
-import qualified Brick.Widgets.Border as Border
-import qualified Brick.Widgets.Border.Style as Border.Style
+import Graphics.Vty qualified as Vty
 
 main :: IO ()
 main = do

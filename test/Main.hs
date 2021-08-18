@@ -2,12 +2,12 @@
 
 module Main where
 
-import Control.Monad (when)
 import Ciphlaim.Integer
 import Control.Lens ((^.))
+import Control.Monad (when)
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import System.Exit (die)
 

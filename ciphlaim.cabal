@@ -25,6 +25,7 @@ common options
     BlockArguments
     DerivingStrategies
     DuplicateRecordFields
+    ImportQualifiedPost
     LambdaCase
     OverloadedLabels
     OverloadedStrings

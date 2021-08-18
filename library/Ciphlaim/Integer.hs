@@ -3,9 +3,9 @@ module Ciphlaim.Integer where
 import Control.Lens ((^.))
 import Control.Monad (when)
 import Data.Generics.Labels ()
-import qualified Data.Vector as Vector
-import Data.Vector (Vector)
 import Data.Text (Text)
+import Data.Vector (Vector)
+import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 
