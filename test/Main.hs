@@ -80,15 +80,11 @@ main = do
         <> ",v:" <> show (orRef ^. #value)
         <> ")"
 
-  putStrLn "createOr"
-  putStrLn ""
   Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
     do
       putStrLn ("createOr " <> makeLabel orAssoc)
       createOr dir orRef sizes `shouldBe` Right fin
 
-  putStrLn "splitOr"
-  putStrLn ""
   Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
     do
       putStrLn ("splitOr " <> makeLabel orAssoc)
