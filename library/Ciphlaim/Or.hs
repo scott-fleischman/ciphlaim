@@ -10,6 +10,13 @@ import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 
+data IndexDirection = LowerIndexFirst | HigherIndexFirst
+  deriving stock (Generic, Eq, Show)
+
+indexDirectionToFoldDirection :: IndexDirection -> FoldDirection
+indexDirectionToFoldDirection LowerIndexFirst = LeftToRight
+indexDirectionToFoldDirection HigherIndexFirst = RightToLeft
+
 data OrRef = OrRef
   { index :: Int
   , value :: Natural
@@ -37,22 +44,6 @@ createOr indexDirection OrRef {index, value} sizes = do
   pure $
     leftFunction (orSize leftSizes) newValue  
 
--- | Increase the size of the Fin without changing its value
-increaseSize :: FinSize -> Fin -> Fin
-increaseSize FinSize {size = increase} Fin {size, value} =
-  Fin
-    { size = size + increase
-    , value
-    }
-
--- | Increase the value and the size of the Fin
-increaseValue :: FinSize -> Fin -> Fin
-increaseValue FinSize {size = increase} Fin {size, value} =
-  Fin
-    { size = size + increase
-    , value = value + increase
-    }
-
 orSize :: Foldable f => f FinSize -> FinSize
 orSize = sum
 
@@ -66,11 +57,7 @@ splitOr indexDirection sizes Fin {size, value} = do
   let combinedSizes = orSize sizes
   when (FinSize size /= combinedSizes) do
     Left "Input size mismatch"
-  let directedFold =
-        case indexDirection of
-          LowerIndexFirst -> Vector.ifoldl' go
-          HigherIndexFirst -> Vector.ifoldr' (\i e r -> go r i e)
-  let (_finalSize, maybeResult) = directedFold (0, Nothing) sizes
+  let (_finalSize, maybeResult) = directedFold (indexDirectionToFoldDirection indexDirection) go (0, Nothing) sizes
   case maybeResult of
     Nothing -> Left "Unable to split"
     Just result -> Right result

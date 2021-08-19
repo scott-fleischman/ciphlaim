@@ -72,6 +72,7 @@ library
   import: options
   exposed-modules:
       Ciphlaim
+      Ciphlaim.And
       Ciphlaim.Fin
       Ciphlaim.Or
   hs-source-dirs:
@@ -91,6 +92,10 @@ test-suite test
   import: options
   type: exitcode-stdio-1.0
   main-is: Main.hs
+  other-modules:
+    AndTest
+    OrTest
+    TestCommon
   hs-source-dirs:
       test
   ghc-options:

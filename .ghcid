@@ -1,4 +1,3 @@
--c "stack ghci --main-is ciphlaim:test:test"
+-c "stack ghci ciphlaim:lib ciphlaim:test:test --main-is ciphlaim:test:test"
 --test Main.main
---setup ":set args --print"
 --restart=ciphlaim.cabal
