@@ -1,5 +1,6 @@
-module Ciphlaim.Integer where
+module Ciphlaim.Or where
 
+import Ciphlaim.Fin
 import Control.Lens ((^.))
 import Control.Monad (when)
 import Data.Generics.Labels ()
@@ -8,19 +9,6 @@ import Data.Vector (Vector)
 import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
-
-data Fin = Fin
-  { size :: Natural
-  , value :: Natural
-  }
-  deriving stock (Generic, Eq, Show)
-
-newtype FinSize = FinSize { size :: Natural }
-  deriving stock (Generic, Eq)
-  deriving newtype (Num, Show)
-
-data IndexDirection = LowerIndexFirst | HigherIndexFirst
-  deriving stock (Generic, Eq, Show)
 
 data OrRef = OrRef
   { index :: Int

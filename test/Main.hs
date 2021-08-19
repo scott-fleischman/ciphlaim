@@ -2,7 +2,8 @@
 
 module Main where
 
-import Ciphlaim.Integer
+import Ciphlaim.Fin
+import Ciphlaim.Or
 import Control.Lens ((^.))
 import Control.Monad (when)
 import Data.Generics.Labels ()

@@ -72,7 +72,8 @@ library
   import: options
   exposed-modules:
       Ciphlaim
-      Ciphlaim.Integer
+      Ciphlaim.Fin
+      Ciphlaim.Or
   hs-source-dirs:
       library
 
