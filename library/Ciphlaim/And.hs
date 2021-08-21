@@ -1,3 +1,5 @@
+-- FoldDirection LeftToRight means left (lower indexes) is the most significant digit
+-- FoldDirection LeftToRight means right (higher indexes) is the least significant digit
 module Ciphlaim.And where
 
 import Ciphlaim.Fin
@@ -12,7 +14,17 @@ createAnd :: FoldDirection -> Vector Fin -> Fin
 createAnd foldDirection = directedFold foldDirection go Fin {size=1, value=0}
   where
   go :: Fin -> Int -> Fin -> Fin
-  go Fin {size = currentSize, value = currentValue} _ Fin {size = newSize, value = newValue} =
+  go
+    Fin
+    { size = currentSize,
+      value = currentValue
+    }
+    _
+    Fin
+    { size = newSize,
+      value = newValue
+    }
+    =
     Fin
     { size = currentSize * newSize,
       value = currentValue * newSize + newValue
