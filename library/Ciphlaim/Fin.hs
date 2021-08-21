@@ -15,6 +15,9 @@ newtype FinSize = FinSize { size :: Natural }
   deriving stock (Generic, Eq)
   deriving newtype (Num, Show)
 
+getSizes :: Functor f => f Fin -> f FinSize
+getSizes = fmap (\Fin {size} -> FinSize {size})
+
 -- | Increase the size of the Fin without changing its value
 increaseSize :: FinSize -> Fin -> Fin
 increaseSize FinSize {size = increase} Fin {size, value} =

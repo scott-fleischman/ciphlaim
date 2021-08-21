@@ -15,6 +15,7 @@ common options
     , generic-lens
     , lens
     , text
+    , transformers
     , vector
     , vty
 
