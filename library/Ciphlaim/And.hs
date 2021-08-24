@@ -8,11 +8,22 @@ import Control.Monad.Trans.State.Strict qualified as State
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
 import Data.Vector qualified as Vector
+import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 
-createAnd :: FoldDirection -> Vector Fin -> Fin
-createAnd foldDirection = directedFold foldDirection go Fin {size=1, value=0}
+data DirectionSignificance
+  = LowIndexMostSignificant
+  | HighIndexMostSignificant
+  deriving stock (Generic, Eq, Show)
+
+significanceAsDirection :: DirectionSignificance -> FoldDirection
+significanceAsDirection LowIndexMostSignificant = LeftToRight
+significanceAsDirection HighIndexMostSignificant = RightToLeft
+
+createAnd :: DirectionSignificance -> Vector Fin -> Fin
+createAnd directionSignificance = directedFold foldDirection go Fin {size=1, value=0}
   where
+  foldDirection = significanceAsDirection directionSignificance
   go :: Fin -> Int -> Fin -> Fin
   go
     Fin
@@ -30,16 +41,16 @@ createAnd foldDirection = directedFold foldDirection go Fin {size=1, value=0}
       value = currentValue * newSize + newValue
     }
 
-splitAnd :: FoldDirection -> Vector FinSize -> Fin -> Vector Natural
-splitAnd foldDirection sizes input =
+splitAnd :: DirectionSignificance -> Vector FinSize -> Fin -> Vector Natural
+splitAnd directionSignificance sizes input =
   let sizesLength = Vector.length sizes
   in if sizesLength == 0
       then Vector.empty
       else
         let adjustIndex =
-              case foldDirection of
-                LeftToRight -> \index -> sizesLength - 1 - index
-                RightToLeft -> id
+              case directionSignificance of
+                LowIndexMostSignificant -> \index -> sizesLength - 1 - index
+                HighIndexMostSignificant -> id
             go :: Int -> State.State Natural Natural
             go index = do
               nat <- State.get
@@ -49,6 +60,6 @@ splitAnd foldDirection sizes input =
               pure value
             stateResult = Vector.generateM sizesLength go
             result = State.evalState stateResult (input ^. #value)
-        in case foldDirection of
-            LeftToRight -> Vector.reverse result
-            RightToLeft -> result
+        in case directionSignificance of
+            LowIndexMostSignificant -> Vector.reverse result
+            HighIndexMostSignificant -> result

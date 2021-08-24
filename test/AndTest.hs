@@ -21,30 +21,30 @@ data Combo =
 data AndAssoc = AndAssoc
   { fin :: Fin
   , combo :: Combo
-  , dir :: FoldDirection
+  , dir :: DirectionSignificance
   }
   deriving stock (Generic, Eq, Show)
 
-combine :: FinSize -> Vector FinSize -> FoldDirection -> Vector (Natural, Vector Natural) -> Vector AndAssoc
+combine :: FinSize -> Vector FinSize -> DirectionSignificance -> Vector (Natural, Vector Natural) -> Vector AndAssoc
 combine FinSize {size} sizes dir pairs =
   (\(value, values) -> AndAssoc Fin {size, value} Combo {sizes, values} dir) <$> pairs
 
 andAssocs :: Vector AndAssoc
 andAssocs =
-  combine 1 [] LeftToRight
+  combine 1 [] LowIndexMostSignificant
     [ (0, [])
     ]
   <>
-  combine 1 [1] LeftToRight
+  combine 1 [1] LowIndexMostSignificant
     [ (0, [0])
     ]
   <>
-  combine 2 [2] LeftToRight
+  combine 2 [2] LowIndexMostSignificant
     [ (0, [0])
     , (1, [1])
     ]
   <>
-  combine 6 [2,3] LeftToRight
+  combine 6 [2,3] LowIndexMostSignificant
     [ (0, [0,0])
     , (1, [0,1])
     , (2, [0,2])
@@ -53,11 +53,11 @@ andAssocs =
     , (5, [1,2])
     ]
   <>
-  combine 6 [2,3,1] LeftToRight
+  combine 6 [2,3,1] LowIndexMostSignificant
     [ (5, [1,2,0])
     ]
   <>
-  combine 30 [2,3,5] LeftToRight
+  combine 30 [2,3,5] LowIndexMostSignificant
     [ (0, [0,0,0])
     , (1, [0,0,1])
     , (2, [0,0,2])
@@ -91,20 +91,20 @@ andAssocs =
     ]
   <>
 
-  combine 1 [] RightToLeft
+  combine 1 [] HighIndexMostSignificant
     [ (0, [])
     ]
   <>
-  combine 1 [1] RightToLeft
+  combine 1 [1] HighIndexMostSignificant
     [ (0, [0])
     ]
   <>
-  combine 2 [2] RightToLeft
+  combine 2 [2] HighIndexMostSignificant
     [ (0, [0])
     , (1, [1])
     ]
   <>
-  combine 6 [2,3] RightToLeft
+  combine 6 [2,3] HighIndexMostSignificant
     [ (0, [0,0])
     , (1, [1,0])
     , (2, [0,1])
@@ -113,11 +113,11 @@ andAssocs =
     , (5, [1,2])
     ]
   <>
-  combine 6 [2,3,1] RightToLeft
+  combine 6 [2,3,1] HighIndexMostSignificant
     [ (5, [1,2,0])
     ]
   <>
-  combine 30 [2,3,5] RightToLeft
+  combine 30 [2,3,5] HighIndexMostSignificant
     [ (0, [0,0,0])
     , (1, [1,0,0])
     , (2, [0,1,0])
