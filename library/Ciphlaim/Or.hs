@@ -1,5 +1,3 @@
--- LowerIndexFirst means lower indexes into the size list are tried first when extracting a value
--- HigherIndexFirst means higher indexes into the size list are tried first when extracting a value
 module Ciphlaim.Or where
 
 import Ciphlaim.Fin
@@ -12,6 +10,8 @@ import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 
+-- LowerIndexFirst means lower indexes into the size list are tried first when extracting a value
+-- HigherIndexFirst means higher indexes into the size list are tried first when extracting a value
 data IndexDirection = LowerIndexFirst | HigherIndexFirst
   deriving stock (Generic, Eq, Show)
 

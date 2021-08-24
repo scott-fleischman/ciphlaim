@@ -74,6 +74,7 @@ library
   exposed-modules:
       Ciphlaim
       Ciphlaim.And
+      Ciphlaim.List
       Ciphlaim.Fin
       Ciphlaim.Or
   hs-source-dirs:
@@ -95,6 +96,7 @@ test-suite test
   main-is: Main.hs
   other-modules:
     AndTest
+    ListTest
     OrTest
     TestCommon
   hs-source-dirs:

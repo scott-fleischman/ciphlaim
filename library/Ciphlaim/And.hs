@@ -1,5 +1,3 @@
--- FoldDirection LeftToRight means left (lower indexes) is the most significant digit
--- FoldDirection LeftToRight means right (higher indexes) is the least significant digit
 module Ciphlaim.And where
 
 import Ciphlaim.Fin
