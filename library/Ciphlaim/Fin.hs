@@ -18,6 +18,9 @@ newtype FinSize = FinSize { size :: Natural }
 getSizes :: Functor f => f Fin -> f FinSize
 getSizes = fmap (\Fin {size} -> FinSize {size})
 
+zipSizesAndValues :: Vector FinSize -> Vector Natural -> Vector Fin
+zipSizesAndValues = Vector.zipWith (\FinSize {size} value -> Fin {size, value})
+
 -- | Increase the size of the Fin without changing its value
 increaseSize :: FinSize -> Fin -> Fin
 increaseSize FinSize {size = increase} Fin {size, value} =

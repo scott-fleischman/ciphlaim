@@ -30,7 +30,7 @@ createAnd foldDirection = directedFold foldDirection go Fin {size=1, value=0}
       value = currentValue * newSize + newValue
     }
 
-splitAnd :: FoldDirection -> Vector FinSize -> Fin -> Vector Fin
+splitAnd :: FoldDirection -> Vector FinSize -> Fin -> Vector Natural
 splitAnd foldDirection sizes input =
   let sizesLength = Vector.length sizes
   in if sizesLength == 0
@@ -40,13 +40,13 @@ splitAnd foldDirection sizes input =
               case foldDirection of
                 LeftToRight -> \index -> sizesLength - 1 - index
                 RightToLeft -> id
-            go :: Int -> State.State Natural Fin
+            go :: Int -> State.State Natural Natural
             go index = do
               nat <- State.get
               let FinSize {size} = sizes Vector.! (adjustIndex index)
               let (rest, value) = nat `divMod` size
               State.put rest
-              pure Fin {size, value}
+              pure value
             stateResult = Vector.generateM sizesLength go
             result = State.evalState stateResult (input ^. #value)
         in case foldDirection of
