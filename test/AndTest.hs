@@ -25,102 +25,130 @@ data AndAssoc = AndAssoc
   }
   deriving stock (Generic, Eq, Show)
 
+combine :: FinSize -> Vector FinSize -> FoldDirection -> Vector (Natural, Vector Natural) -> Vector AndAssoc
+combine FinSize {size} sizes dir pairs =
+  (\(value, values) -> AndAssoc Fin {size, value} Combo {sizes, values} dir) <$> pairs
+
 andAssocs :: Vector AndAssoc
 andAssocs =
-  [ AndAssoc Fin {size=1, value=0} Combo {sizes=[], values=[]} LeftToRight
+  combine 1 [] LeftToRight
+    [ (0, [])
+    ]
+  <>
+  combine 1 [1] LeftToRight
+    [ (0, [0])
+    ]
+  <>
+  combine 2 [2] LeftToRight
+    [ (0, [0])
+    , (1, [1])
+    ]
+  <>
+  combine 6 [2,3] LeftToRight
+    [ (0, [0,0])
+    , (1, [0,1])
+    , (2, [0,2])
+    , (3, [1,0])
+    , (4, [1,1])
+    , (5, [1,2])
+    ]
+  <>
+  combine 6 [2,3,1] LeftToRight
+    [ (5, [1,2,0])
+    ]
+  <>
+  combine 30 [2,3,5] LeftToRight
+    [ (0, [0,0,0])
+    , (1, [0,0,1])
+    , (2, [0,0,2])
+    , (3, [0,0,3])
+    , (4, [0,0,4])
+    , (5, [0,1,0])
+    , (6, [0,1,1])
+    , (7, [0,1,2])
+    , (8, [0,1,3])
+    , (9, [0,1,4])
+    , (10, [0,2,0])
+    , (11, [0,2,1])
+    , (12, [0,2,2])
+    , (13, [0,2,3])
+    , (14, [0,2,4])
+    , (15, [1,0,0])
+    , (16, [1,0,1])
+    , (17, [1,0,2])
+    , (18, [1,0,3])
+    , (19, [1,0,4])
+    , (20, [1,1,0])
+    , (21, [1,1,1])
+    , (22, [1,1,2])
+    , (23, [1,1,3])
+    , (24, [1,1,4])
+    , (25, [1,2,0])
+    , (26, [1,2,1])
+    , (27, [1,2,2])
+    , (28, [1,2,3])
+    , (29, [1,2,4])
+    ]
+  <>
 
-  , AndAssoc Fin {size=1, value=0} Combo {sizes=[1], values=[0]} LeftToRight
-
-  , AndAssoc Fin {size=2, value=0} Combo {sizes=[2], values=[0]} LeftToRight
-  , AndAssoc Fin {size=2, value=1} Combo {sizes=[2], values=[1]} LeftToRight
-
-  , AndAssoc Fin {size=6, value=0} Combo {sizes=[2,3], values=[0,0]} LeftToRight
-  , AndAssoc Fin {size=6, value=1} Combo {sizes=[2,3], values=[0,1]} LeftToRight
-  , AndAssoc Fin {size=6, value=2} Combo {sizes=[2,3], values=[0,2]} LeftToRight
-  , AndAssoc Fin {size=6, value=3} Combo {sizes=[2,3], values=[1,0]} LeftToRight
-  , AndAssoc Fin {size=6, value=4} Combo {sizes=[2,3], values=[1,1]} LeftToRight
-  , AndAssoc Fin {size=6, value=5} Combo {sizes=[2,3], values=[1,2]} LeftToRight
-
-  , AndAssoc Fin {size=6, value=5} Combo {sizes=[2,3,1], values=[1,2,0]} LeftToRight
-
-  , AndAssoc Fin {size=30, value=0} Combo {sizes=[2,3,5], values=[0,0,0]} LeftToRight
-  , AndAssoc Fin {size=30, value=1} Combo {sizes=[2,3,5], values=[0,0,1]} LeftToRight
-  , AndAssoc Fin {size=30, value=2} Combo {sizes=[2,3,5], values=[0,0,2]} LeftToRight
-  , AndAssoc Fin {size=30, value=3} Combo {sizes=[2,3,5], values=[0,0,3]} LeftToRight
-  , AndAssoc Fin {size=30, value=4} Combo {sizes=[2,3,5], values=[0,0,4]} LeftToRight
-  , AndAssoc Fin {size=30, value=5} Combo {sizes=[2,3,5], values=[0,1,0]} LeftToRight
-  , AndAssoc Fin {size=30, value=6} Combo {sizes=[2,3,5], values=[0,1,1]} LeftToRight
-  , AndAssoc Fin {size=30, value=7} Combo {sizes=[2,3,5], values=[0,1,2]} LeftToRight
-  , AndAssoc Fin {size=30, value=8} Combo {sizes=[2,3,5], values=[0,1,3]} LeftToRight
-  , AndAssoc Fin {size=30, value=9} Combo {sizes=[2,3,5], values=[0,1,4]} LeftToRight
-  , AndAssoc Fin {size=30, value=10} Combo {sizes=[2,3,5], values=[0,2,0]} LeftToRight
-  , AndAssoc Fin {size=30, value=11} Combo {sizes=[2,3,5], values=[0,2,1]} LeftToRight
-  , AndAssoc Fin {size=30, value=12} Combo {sizes=[2,3,5], values=[0,2,2]} LeftToRight
-  , AndAssoc Fin {size=30, value=13} Combo {sizes=[2,3,5], values=[0,2,3]} LeftToRight
-  , AndAssoc Fin {size=30, value=14} Combo {sizes=[2,3,5], values=[0,2,4]} LeftToRight
-  , AndAssoc Fin {size=30, value=15} Combo {sizes=[2,3,5], values=[1,0,0]} LeftToRight
-  , AndAssoc Fin {size=30, value=16} Combo {sizes=[2,3,5], values=[1,0,1]} LeftToRight
-  , AndAssoc Fin {size=30, value=17} Combo {sizes=[2,3,5], values=[1,0,2]} LeftToRight
-  , AndAssoc Fin {size=30, value=18} Combo {sizes=[2,3,5], values=[1,0,3]} LeftToRight
-  , AndAssoc Fin {size=30, value=19} Combo {sizes=[2,3,5], values=[1,0,4]} LeftToRight
-  , AndAssoc Fin {size=30, value=20} Combo {sizes=[2,3,5], values=[1,1,0]} LeftToRight
-  , AndAssoc Fin {size=30, value=21} Combo {sizes=[2,3,5], values=[1,1,1]} LeftToRight
-  , AndAssoc Fin {size=30, value=22} Combo {sizes=[2,3,5], values=[1,1,2]} LeftToRight
-  , AndAssoc Fin {size=30, value=23} Combo {sizes=[2,3,5], values=[1,1,3]} LeftToRight
-  , AndAssoc Fin {size=30, value=24} Combo {sizes=[2,3,5], values=[1,1,4]} LeftToRight
-  , AndAssoc Fin {size=30, value=25} Combo {sizes=[2,3,5], values=[1,2,0]} LeftToRight
-  , AndAssoc Fin {size=30, value=26} Combo {sizes=[2,3,5], values=[1,2,1]} LeftToRight
-  , AndAssoc Fin {size=30, value=27} Combo {sizes=[2,3,5], values=[1,2,2]} LeftToRight
-  , AndAssoc Fin {size=30, value=28} Combo {sizes=[2,3,5], values=[1,2,3]} LeftToRight
-  , AndAssoc Fin {size=30, value=29} Combo {sizes=[2,3,5], values=[1,2,4]} LeftToRight
-
-  , AndAssoc Fin {size=1, value=0} Combo {sizes=[], values=[]} RightToLeft
-
-  , AndAssoc Fin {size=1, value=0} Combo {sizes=[1], values=[0]} RightToLeft
-
-  , AndAssoc Fin {size=2, value=0} Combo {sizes=[2], values=[0]} RightToLeft
-  , AndAssoc Fin {size=2, value=1} Combo {sizes=[2], values=[1]} RightToLeft
-
-  , AndAssoc Fin {size=6, value=0} Combo {sizes=[2,3], values=[0,0]} RightToLeft
-  , AndAssoc Fin {size=6, value=1} Combo {sizes=[2,3], values=[1,0]} RightToLeft
-  , AndAssoc Fin {size=6, value=2} Combo {sizes=[2,3], values=[0,1]} RightToLeft
-  , AndAssoc Fin {size=6, value=3} Combo {sizes=[2,3], values=[1,1]} RightToLeft
-  , AndAssoc Fin {size=6, value=4} Combo {sizes=[2,3], values=[0,2]} RightToLeft
-  , AndAssoc Fin {size=6, value=5} Combo {sizes=[2,3], values=[1,2]} RightToLeft
-
-  , AndAssoc Fin {size=6, value=5} Combo {sizes=[2,3,1], values=[1,2,0]} RightToLeft
-
-  , AndAssoc Fin {size=30, value=0} Combo {sizes=[2,3,5], values=[0,0,0]} RightToLeft
-  , AndAssoc Fin {size=30, value=1} Combo {sizes=[2,3,5], values=[1,0,0]} RightToLeft
-  , AndAssoc Fin {size=30, value=2} Combo {sizes=[2,3,5], values=[0,1,0]} RightToLeft
-  , AndAssoc Fin {size=30, value=3} Combo {sizes=[2,3,5], values=[1,1,0]} RightToLeft
-  , AndAssoc Fin {size=30, value=4} Combo {sizes=[2,3,5], values=[0,2,0]} RightToLeft
-  , AndAssoc Fin {size=30, value=5} Combo {sizes=[2,3,5], values=[1,2,0]} RightToLeft
-  , AndAssoc Fin {size=30, value=6} Combo {sizes=[2,3,5], values=[0,0,1]} RightToLeft
-  , AndAssoc Fin {size=30, value=7} Combo {sizes=[2,3,5], values=[1,0,1]} RightToLeft
-  , AndAssoc Fin {size=30, value=8} Combo {sizes=[2,3,5], values=[0,1,1]} RightToLeft
-  , AndAssoc Fin {size=30, value=9} Combo {sizes=[2,3,5], values=[1,1,1]} RightToLeft
-  , AndAssoc Fin {size=30, value=10} Combo {sizes=[2,3,5], values=[0,2,1]} RightToLeft
-  , AndAssoc Fin {size=30, value=11} Combo {sizes=[2,3,5], values=[1,2,1]} RightToLeft
-  , AndAssoc Fin {size=30, value=12} Combo {sizes=[2,3,5], values=[0,0,2]} RightToLeft
-  , AndAssoc Fin {size=30, value=13} Combo {sizes=[2,3,5], values=[1,0,2]} RightToLeft
-  , AndAssoc Fin {size=30, value=14} Combo {sizes=[2,3,5], values=[0,1,2]} RightToLeft
-  , AndAssoc Fin {size=30, value=15} Combo {sizes=[2,3,5], values=[1,1,2]} RightToLeft
-  , AndAssoc Fin {size=30, value=16} Combo {sizes=[2,3,5], values=[0,2,2]} RightToLeft
-  , AndAssoc Fin {size=30, value=17} Combo {sizes=[2,3,5], values=[1,2,2]} RightToLeft
-  , AndAssoc Fin {size=30, value=18} Combo {sizes=[2,3,5], values=[0,0,3]} RightToLeft
-  , AndAssoc Fin {size=30, value=19} Combo {sizes=[2,3,5], values=[1,0,3]} RightToLeft
-  , AndAssoc Fin {size=30, value=20} Combo {sizes=[2,3,5], values=[0,1,3]} RightToLeft
-  , AndAssoc Fin {size=30, value=21} Combo {sizes=[2,3,5], values=[1,1,3]} RightToLeft
-  , AndAssoc Fin {size=30, value=22} Combo {sizes=[2,3,5], values=[0,2,3]} RightToLeft
-  , AndAssoc Fin {size=30, value=23} Combo {sizes=[2,3,5], values=[1,2,3]} RightToLeft
-  , AndAssoc Fin {size=30, value=24} Combo {sizes=[2,3,5], values=[0,0,4]} RightToLeft
-  , AndAssoc Fin {size=30, value=25} Combo {sizes=[2,3,5], values=[1,0,4]} RightToLeft
-  , AndAssoc Fin {size=30, value=26} Combo {sizes=[2,3,5], values=[0,1,4]} RightToLeft
-  , AndAssoc Fin {size=30, value=27} Combo {sizes=[2,3,5], values=[1,1,4]} RightToLeft
-  , AndAssoc Fin {size=30, value=28} Combo {sizes=[2,3,5], values=[0,2,4]} RightToLeft
-  , AndAssoc Fin {size=30, value=29} Combo {sizes=[2,3,5], values=[1,2,4]} RightToLeft
-  ]
+  combine 1 [] RightToLeft
+    [ (0, [])
+    ]
+  <>
+  combine 1 [1] RightToLeft
+    [ (0, [0])
+    ]
+  <>
+  combine 2 [2] RightToLeft
+    [ (0, [0])
+    , (1, [1])
+    ]
+  <>
+  combine 6 [2,3] RightToLeft
+    [ (0, [0,0])
+    , (1, [1,0])
+    , (2, [0,1])
+    , (3, [1,1])
+    , (4, [0,2])
+    , (5, [1,2])
+    ]
+  <>
+  combine 6 [2,3,1] RightToLeft
+    [ (5, [1,2,0])
+    ]
+  <>
+  combine 30 [2,3,5] RightToLeft
+    [ (0, [0,0,0])
+    , (1, [1,0,0])
+    , (2, [0,1,0])
+    , (3, [1,1,0])
+    , (4, [0,2,0])
+    , (5, [1,2,0])
+    , (6, [0,0,1])
+    , (7, [1,0,1])
+    , (8, [0,1,1])
+    , (9, [1,1,1])
+    , (10, [0,2,1])
+    , (11, [1,2,1])
+    , (12, [0,0,2])
+    , (13, [1,0,2])
+    , (14, [0,1,2])
+    , (15, [1,1,2])
+    , (16, [0,2,2])
+    , (17, [1,2,2])
+    , (18, [0,0,3])
+    , (19, [1,0,3])
+    , (20, [0,1,3])
+    , (21, [1,1,3])
+    , (22, [0,2,3])
+    , (23, [1,2,3])
+    , (24, [0,0,4])
+    , (25, [1,0,4])
+    , (26, [0,1,4])
+    , (27, [1,1,4])
+    , (28, [0,2,4])
+    , (29, [1,2,4])
+    ]
 
 andTest :: IO ()
 andTest = do
