@@ -49,8 +49,25 @@ findIthUnsetBit targetCount size seen = go 0 0
             then go (index + 1) (count + 1)
             else error "findIthUnsetBit: targetCount not found"
 
-createPerm :: DirectionSignificance -> Vector Int -> Fin
-createPerm dir = createAnd dir . createPermVector
+createPermFused :: Vector Int -> Fin
+createPermFused input =
+  let (result, _, _) =
+        Vector.foldl' go (Fin{size=1, value=0}, fromIntegral @_ @Natural (Vector.length input), 0) input
+  in result
+  where
+  go :: (Fin, Natural, Natural) -> Int -> (Fin, Natural, Natural)
+  go (Fin {size=previousSize, value=previousValue}, valueSize, seen) currentValue =
+    let compactCurrentValue = unsetBitsBeforeIndex currentValue seen
+        newSeen = Bits.setBit seen currentValue
+        newResult =
+          Fin
+            { size = previousSize * valueSize
+            , value = previousValue * valueSize + compactCurrentValue
+            }
+    in (newResult, valueSize - 1, newSeen)
+
+createPermComposed :: DirectionSignificance -> Vector Int -> Fin
+createPermComposed dir = createAnd dir . createPermVector
 
 createPermVector :: Vector Int -> Vector Fin
 createPermVector input =
