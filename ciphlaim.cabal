@@ -77,6 +77,7 @@ library
       Ciphlaim.List
       Ciphlaim.Fin
       Ciphlaim.Or
+      Ciphlaim.Perm
   hs-source-dirs:
       library
 
@@ -98,6 +99,7 @@ test-suite test
     AndTest
     ListTest
     OrTest
+    PermTest
     TestCommon
   hs-source-dirs:
       test
