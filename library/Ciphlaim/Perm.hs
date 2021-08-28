@@ -1,7 +1,9 @@
 module Ciphlaim.Perm where
 
+import Ciphlaim.And
 import Ciphlaim.Fin
 -- import Control.Lens.Operators
+import Control.Monad.Trans.State.Strict qualified as State
 import Data.Bits qualified as Bits
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
@@ -14,26 +16,27 @@ import Numeric.Natural (Natural)
 --       seen = 0
 --   in _
 
-createPerm :: Vector Int -> Fin
-createPerm table =
-  let totalLength = fromIntegral @_ @Natural (Vector.length table)
-      (valueSize, seen, result) =
-        Vector.foldl' go (totalLength, 0, Fin {size=1, value=0}) table
-  in 
-    if valueSize /= 0
-      then error $ "valueSize should be zero but was " <> show valueSize
-      else
-        if seen /= (2 ^ totalLength) - 1
-          then error $ "not all bits set: " <> show seen
-          else result
+createPerm :: DirectionSignificance -> Vector Int -> Fin
+createPerm dir = createAnd dir . createPermVector
+
+createPermVector :: Vector Int -> Vector Fin
+createPermVector input =
+  let mappedVector :: State.State (Natural, Natural) (Vector Fin)
+      mappedVector = traverse go input
+
+      totalLength :: Natural
+      totalLength = fromIntegral @_ @Natural (Vector.length input)
+
+      (resultVector, (_finalValue, _finalSeen)) = State.runState mappedVector (totalLength, 0)
+  in resultVector
   where
-    go :: (Natural, Natural, Fin) -> Int -> (Natural, Natural, Fin)
-    go (valueSize, seen, Fin {size=sizeSoFar, value=valueSoFar}) currentValue =
-      let compactCurrentValue = unsetBitsBeforeIndex currentValue seen
-          newSeen = Bits.setBit seen currentValue
-          resultSize = valueSize * sizeSoFar 
-          resultValue = valueSize * valueSoFar + compactCurrentValue
-      in (valueSize - 1, newSeen, Fin {size=resultSize, value=resultValue})
+  go :: Int -> State.State (Natural, Natural) Fin
+  go currentValue = do
+    (valueSize, seen) <- State.get
+    let compactCurrentValue = unsetBitsBeforeIndex currentValue seen
+        newSeen = Bits.setBit seen currentValue
+    State.put (valueSize - 1, newSeen)
+    pure Fin {size=valueSize, value=compactCurrentValue}
 
 unsetBitsBeforeIndex :: Int -> Natural -> Natural
 unsetBitsBeforeIndex index seen = go 0
@@ -43,8 +46,8 @@ unsetBitsBeforeIndex index seen = go 0
     if currentIndex < index
       then
         if Bits.testBit seen currentIndex
-          then 1 + (go (currentIndex + 1))
-          else go (currentIndex + 1)
+          then go (currentIndex + 1)
+          else 1 + (go (currentIndex + 1))
       else
         0
 
