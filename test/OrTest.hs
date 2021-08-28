@@ -4,10 +4,7 @@ module OrTest where
 
 import Ciphlaim.Fin
 import Ciphlaim.Or
-import Control.Lens ((^.))
-import Data.Generics.Labels ()
 import Data.Vector (Vector)
-import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import TestCommon
@@ -84,22 +81,13 @@ orAssocs =
     , (8, OrRef {index=0, value=3})
     ]
 
-orTest :: IO ()
-orTest = do
-  let makeLabel OrAssoc {fin, orRef, sizes, dir}
-        = show dir
-        <> " " <> show sizes
-        <> " fin:" <> show (fin ^. #value)
-        <> " (i:" <> show (orRef ^. #index)
-        <> ",v:" <> show (orRef ^. #value)
-        <> ")"
-
-  Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
-    do
-      putStrLn ("createOr " <> makeLabel orAssoc)
-      createOr dir orRef sizes `shouldBe` Right fin
-
-  Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
-    do
-      putStrLn ("splitOr " <> makeLabel orAssoc)
-      splitOr dir sizes fin `shouldBe` Right orRef
+orTests :: [(PropertyName, Property)]
+orTests =
+  do
+    vectorFor orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
+      makeTest ("createOr " <> show orAssoc) do
+        createOr dir orRef sizes === Right fin
+  <> do
+    vectorFor orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
+      makeTest ("splitOr " <> show orAssoc) do
+        splitOr dir sizes fin === Right orRef

@@ -7,7 +7,6 @@ import Ciphlaim.List
 import Ciphlaim.Fin
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
-import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import TestCommon
@@ -112,14 +111,13 @@ listAssocs =
     , (8, [2,2])
     ]
 
-listTest :: IO ()
-listTest = do
-  Vector.forM_ listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
-    do
-      putStrLn ("createList " <> show listAssoc)
-      createList dir size values `shouldBe` fin
-
-  Vector.forM_ listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
-    do
-      putStrLn ("splitList " <> show listAssoc)
-      splitList dir size fin `shouldBe` values
+listTests :: [(PropertyName, Property)]
+listTests =
+  do
+    vectorFor listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
+      makeTest ("createList " <> show listAssoc) do
+        createList dir size values === fin
+  <> do
+    vectorFor listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
+      makeTest ("splitList " <> show listAssoc) do
+        splitList dir size fin === values

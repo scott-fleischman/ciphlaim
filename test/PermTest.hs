@@ -97,24 +97,21 @@ permAssocs =
   , PermAssoc Fin {size=6, value=5} [2, 1, 0] HighIndexMostSignificant
   ]
 
-permTest :: IO ()
-permTest = do
-  Vector.forM_ permVecAssocs \permVecAssoc@PermVecAssoc {values, perms} ->
-    do
-      putStrLn ("createPermVector " <> show permVecAssoc)
-      createPermVector values `shouldBe` perms
-
-  Vector.forM_ permAssocs \permAssoc@PermAssoc {fin, values} ->
-    do
-      putStrLn ("createPermFused " <> show permAssoc)
-      createPermFused values `shouldBe` fin
-
-  Vector.forM_ permAssocs \permAssoc@PermAssoc {fin, values, dir} ->
-    do
-      putStrLn ("createPermComposed " <> show permAssoc)
-      createPermComposed dir values `shouldBe` fin
-
-  Vector.forM_ permAssocs \permAssoc@PermAssoc {fin, values} ->
-    do
-      putStrLn ("splitPerm " <> show permAssoc)
-      splitPerm (FinSize (fromIntegral (Vector.length values))) fin `shouldBe` values
+permTests :: [(PropertyName, Property)]
+permTests =
+  do
+    vectorFor permVecAssocs \permVecAssoc@PermVecAssoc {values, perms} ->
+      makeTest ("createPermVector " <> show permVecAssoc) do
+        createPermVector values === perms
+  <> do
+    vectorFor permAssocs \permAssoc@PermAssoc {fin, values, dir} ->
+      makeTest ("createPermFused " <> show permAssoc) do
+        createPermFused dir values === fin
+  <> do
+    vectorFor permAssocs \permAssoc@PermAssoc {fin, values, dir} ->
+      makeTest ("createPermComposed " <> show permAssoc) do
+        createPermComposed dir values === fin
+  <> do
+    vectorFor permAssocs \permAssoc@PermAssoc {fin, values} ->
+      makeTest ("splitPerm " <> show permAssoc) do
+        splitPerm (FinSize (fromIntegral (Vector.length values))) fin === values

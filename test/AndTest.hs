@@ -6,7 +6,6 @@ import Ciphlaim.And
 import Ciphlaim.Fin
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
-import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import TestCommon
@@ -150,20 +149,13 @@ andAssocs =
     , (29, [1,2,4])
     ]
 
-andTest :: IO ()
-andTest = do
-  let makeLabel AndAssoc {fin, combo = Combo {sizes, values}, dir}
-        = show dir
-        <> " " <> show fin
-        <> " sizes:" <> show sizes
-        <> " values:" <> show values
-
-  Vector.forM_ andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
-    do
-      putStrLn ("createAnd " <> makeLabel andAssoc)
-      createAnd dir (zipSizesAndValues sizes values) `shouldBe` fin
-
-  Vector.forM_ andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
-    do
-      putStrLn ("splitAnd " <> makeLabel andAssoc)
-      splitAnd dir sizes fin `shouldBe` values
+andTests :: [(PropertyName, Property)]
+andTests =
+  do
+    vectorFor andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
+      makeTest ("createAnd " <> show andAssoc) do
+        createAnd dir (zipSizesAndValues sizes values) === fin
+  <> do
+    vectorFor andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
+      makeTest ("splitAnd " <> show andAssoc) do
+        splitAnd dir sizes fin === values

@@ -1,15 +1,21 @@
-module TestCommon where
+module TestCommon
+  ( (Hedgehog.===)
+  , Hedgehog.Property
+  , Hedgehog.PropertyName
+  , vectorFor
+  , makeTest
+  )
+  where
 
-import Control.Monad (when)
-import System.Exit (die)
+import Data.String (fromString)
+import Data.Vector qualified as Vector
+import Hedgehog qualified
 
-shouldBe :: (Eq a, Show a) => a -> a -> IO ()
-shouldBe actual expected = do
-  when (actual /= expected) do
-    let message =
-          "*** Expected:\n"
-          <> show expected <> "\n"
-          <> "\n"
-          <> "*** Actual:\n"
-          <> show actual <> "\n"
-    die message
+vectorFor :: Vector.Vector a -> (a -> b) -> [b]
+vectorFor vector perItem = Vector.toList $ flip Vector.map vector perItem
+
+makeTest :: String -> Hedgehog.PropertyT IO () -> (Hedgehog.PropertyName, Hedgehog.Property)
+makeTest nameString testAction =
+  let name = fromString nameString
+      test = Hedgehog.withTests 1 $ Hedgehog.property testAction
+  in (name, test)
