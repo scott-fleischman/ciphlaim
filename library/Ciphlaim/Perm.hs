@@ -9,25 +9,19 @@ import Data.Vector (Vector)
 import Data.Vector qualified as Vector
 import Numeric.Natural (Natural)
 
-splitPerm :: FinSize -> Fin -> Vector Int
-splitPerm FinSize {size=elemSize} Fin {value} = State.evalState stateVector (elemSize, 0, value)
-  where
-  intElemSize :: Int
-  intElemSize = fromIntegral elemSize
-
-  stateVector :: State.State (Natural, Natural, Natural) (Vector Int)
-  stateVector = Vector.replicateM intElemSize go
-
-  go :: State.State (Natural, Natural, Natural) Int
-  go = do
-    (currentSize, seen, currentValue) <- State.get
-    let (divResult, modResult) = currentValue `divMod` currentSize
-        currentIndex :: Int
-        currentIndex = fromIntegral modResult
-        actualValue = findIthUnsetBit (currentIndex + 1) intElemSize seen
-        newSeen = Bits.setBit seen actualValue
-    State.put (currentSize - 1, newSeen, divResult)
-    pure actualValue
+splitPermCompact :: FinSize -> Fin -> Vector Natural
+splitPermCompact FinSize {size=elemSize} Fin {value} =
+  let makeCompact :: Int -> State.State (Natural, Natural) Natural
+      makeCompact _ = do
+        (currentIndex, currentValue) <- State.get
+        let (divResult, modResult) = currentValue `divMod` currentIndex
+        State.put (currentIndex + 1, divResult)
+        pure modResult
+      combined :: State.State (Natural, Natural) (Vector Natural)
+      combined = Vector.generateM (fromIntegral @_ @Int elemSize) makeCompact
+      compactIndexes :: Vector Natural
+      compactIndexes = State.evalState combined (1, value)
+  in compactIndexes
 
 findIthUnsetBit :: Int -> Int -> Natural -> Int
 findIthUnsetBit targetCount size seen = go 0 0

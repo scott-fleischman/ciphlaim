@@ -7,8 +7,8 @@ import Ciphlaim.Perm
 import Ciphlaim.Fin
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
-import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
+import Numeric.Natural (Natural)
 import TestCommon
 
 data PermVecAssoc = PermVecAssoc
@@ -32,6 +32,28 @@ permVecAssocs =
   , PermVecAssoc [1, 2, 0] [Fin {size=3, value=1}, Fin {size=2, value=1}, Fin {size=1, value=0}]
   , PermVecAssoc [2, 0, 1] [Fin {size=3, value=2}, Fin {size=2, value=0}, Fin {size=1, value=0}]
   , PermVecAssoc [2, 1, 0] [Fin {size=3, value=2}, Fin {size=2, value=1}, Fin {size=1, value=0}]
+  ]
+
+data PermVecCompactAssoc = PermVecCompactAssoc
+  { elemSize :: Natural
+  , fin :: Fin
+  , compactIndexes :: Vector Natural
+  }
+  deriving stock (Generic, Eq, Show)
+
+permVecCompactAssocs :: Vector PermVecCompactAssoc
+permVecCompactAssocs =
+  [ PermVecCompactAssoc 1 Fin {size=1, value=0} [0]
+
+  , PermVecCompactAssoc 2 Fin {size=2, value=0} [0, 0]
+  , PermVecCompactAssoc 2 Fin {size=2, value=1} [0, 1]
+
+  , PermVecCompactAssoc 3 Fin {size=6, value=0} [0, 0, 0]
+  , PermVecCompactAssoc 3 Fin {size=6, value=1} [0, 1, 0]
+  , PermVecCompactAssoc 3 Fin {size=6, value=2} [0, 0, 1]
+  , PermVecCompactAssoc 3 Fin {size=6, value=3} [0, 1, 1]
+  , PermVecCompactAssoc 3 Fin {size=6, value=4} [0, 0, 2]
+  , PermVecCompactAssoc 3 Fin {size=6, value=5} [0, 1, 2]
   ]
 
 data PermAssoc = PermAssoc
@@ -82,19 +104,19 @@ permAssocs =
   , PermAssoc Fin {size=24, value=22} [3, 2, 0, 1] LowIndexMostSignificant
   , PermAssoc Fin {size=24, value=23} [3, 2, 1, 0] LowIndexMostSignificant
 
-  , PermAssoc Fin {size=1, value=0} [] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=1, value=0} [] HighIndexMostSignificant
 
-  , PermAssoc Fin {size=1, value=0} [0] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=1, value=0} [0] HighIndexMostSignificant
 
-  , PermAssoc Fin {size=2, value=0} [0, 1] HighIndexMostSignificant
-  , PermAssoc Fin {size=2, value=1} [1, 0] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=2, value=0} [0, 1] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=2, value=1} [1, 0] HighIndexMostSignificant
  
-  , PermAssoc Fin {size=6, value=0} [0, 1, 2] HighIndexMostSignificant
-  , PermAssoc Fin {size=6, value=1} [1, 0, 2] HighIndexMostSignificant
-  , PermAssoc Fin {size=6, value=2} [2, 0, 1] HighIndexMostSignificant
-  , PermAssoc Fin {size=6, value=3} [0, 2, 1] HighIndexMostSignificant
-  , PermAssoc Fin {size=6, value=4} [1, 2, 0] HighIndexMostSignificant
-  , PermAssoc Fin {size=6, value=5} [2, 1, 0] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=6, value=0} [0, 1, 2] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=6, value=1} [1, 0, 2] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=6, value=2} [2, 0, 1] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=6, value=3} [0, 2, 1] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=6, value=4} [1, 2, 0] HighIndexMostSignificant
+  -- , PermAssoc Fin {size=6, value=5} [2, 1, 0] HighIndexMostSignificant
   ]
 
 permTests :: [(PropertyName, Property)]
@@ -112,6 +134,6 @@ permTests =
       makeTest ("createPermComposed " <> show permAssoc) do
         createPermComposed dir values === fin
   <> do
-    vectorFor permAssocs \permAssoc@PermAssoc {fin, values} ->
-      makeTest ("splitPerm " <> show permAssoc) do
-        splitPerm (FinSize (fromIntegral (Vector.length values))) fin === values
+    vectorFor permVecCompactAssocs \assoc@PermVecCompactAssoc {elemSize, fin, compactIndexes} ->
+      makeTest ("splitPermCompact " <> show assoc) do
+        splitPermCompact (FinSize elemSize) fin === compactIndexes
