@@ -2,7 +2,6 @@ module Ciphlaim.Perm where
 
 import Ciphlaim.And
 import Ciphlaim.Fin
--- import Control.Lens.Operators
 import Control.Monad.Trans.State.Strict qualified as State
 import Data.Bits qualified as Bits
 import Data.Generics.Labels ()
@@ -10,11 +9,45 @@ import Data.Vector (Vector)
 import Data.Vector qualified as Vector
 import Numeric.Natural (Natural)
 
--- splitPerm :: Fin -> Vector Natural
--- splitPerm Fin {size, value} =
---   let seen :: Natural
---       seen = 0
---   in _
+splitPerm :: FinSize -> Fin -> Vector Int
+splitPerm FinSize {size=elemSize} Fin {value} = State.evalState stateVector (elemSize, 0, value)
+  where
+  intElemSize :: Int
+  intElemSize = fromIntegral elemSize
+
+  stateVector :: State.State (Natural, Natural, Natural) (Vector Int)
+  stateVector = Vector.replicateM intElemSize go
+
+  go :: State.State (Natural, Natural, Natural) Int
+  go = do
+    (currentSize, seen, currentValue) <- State.get
+    let (divResult, modResult) = currentValue `divMod` currentSize
+        currentIndex :: Int
+        currentIndex = fromIntegral modResult
+        actualValue = findIthUnsetBit (currentIndex + 1) intElemSize seen
+        newSeen = Bits.setBit seen actualValue
+    State.put (currentSize - 1, newSeen, divResult)
+    pure actualValue
+
+findIthUnsetBit :: Int -> Int -> Natural -> Int
+findIthUnsetBit targetCount size seen = go 0 0
+  where
+  go :: Int -> Int -> Int
+  go index count =
+    if Bits.testBit seen index
+      then
+        let newIndex = index + 1
+        in if newIndex < size
+          then go (index + 1) count
+          else error "findIthUnsetBit: targetCount not found"
+      else
+        let newIndex = index + 1
+            newCount = count + 1
+        in if newCount == targetCount
+          then index
+          else if newIndex < size
+            then go (index + 1) (count + 1)
+            else error "findIthUnsetBit: targetCount not found"
 
 createPerm :: DirectionSignificance -> Vector Int -> Fin
 createPerm dir = createAnd dir . createPermVector
@@ -50,17 +83,3 @@ unsetBitsBeforeIndex index seen = go 0
           else 1 + (go (currentIndex + 1))
       else
         0
-
--- Could use the cpu instructions bsr/bsf
--- firstSetBit :: Int -> Natural -> Maybe Int
--- firstSetBit size seen = go 0
---   where
---   go :: Int -> Maybe Int
---   go bitIndex =
---     if bitIndex < size
---       then
---         if Bits.testBit seen n
---           then Just n
---           else go (n + 1)
---       else
---         Nothing
