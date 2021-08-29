@@ -7,6 +7,7 @@ import Ciphlaim.Perm
 import Ciphlaim.Fin
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
+import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import TestCommon
@@ -137,3 +138,7 @@ permTests =
     vectorFor permVecCompactAssocs \assoc@PermVecCompactAssoc {elemSize, fin, compactIndexes} ->
       makeTest ("splitPermCompact " <> show assoc) do
         splitPermCompact (FinSize elemSize) fin === compactIndexes
+  <> do
+    vectorFor permAssocs \assoc@PermAssoc {fin, values} ->
+      makeTest ("splitPerm " <> show assoc) do
+        splitPerm (FinSize (fromIntegral @_ (Vector.length values))) fin === values

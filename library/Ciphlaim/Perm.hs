@@ -9,6 +9,26 @@ import Data.Vector (Vector)
 import Data.Vector qualified as Vector
 import Numeric.Natural (Natural)
 
+splitPerm :: FinSize -> Fin -> Vector Int
+splitPerm elemSize@FinSize{size=elemSizeNat} fin =
+  let reverseCompact :: Vector Natural
+      reverseCompact = splitPermCompact elemSize fin
+      leftToRightCompact = Vector.reverse reverseCompact
+      step :: Natural -> State.State Natural Int
+      step compactIndex = do
+        seen <- State.get
+        let expandedIndex =
+              indexForUnsetBitCount
+                (fromIntegral @Natural @Int elemSizeNat)
+                (fromIntegral @Natural @Int compactIndex + 1)
+                seen
+            newSeen = Bits.setBit seen expandedIndex
+        State.put newSeen
+        pure expandedIndex
+      result :: State.State Natural (Vector Int)
+      result = traverse step leftToRightCompact
+  in State.evalState result 0
+
 splitPermCompact :: FinSize -> Fin -> Vector Natural
 splitPermCompact FinSize {size=elemSize} Fin {value} =
   let makeCompact :: Int -> State.State (Natural, Natural) Natural
@@ -104,15 +124,19 @@ unsetBitsBeforeIndex index seen = go 0
       else
         0
 
-unsetBitsAfterIndex :: Int -> Int -> Natural -> Natural
-unsetBitsAfterIndex size index seen = go (size - 1)
+indexForUnsetBitCount :: Int -> Int -> Natural -> Int
+indexForUnsetBitCount maxSize unsetBitCount seen = go (0, 0)
   where
-  go :: Int -> Natural
-  go currentIndex =
-    if currentIndex < index && currentIndex >= 0
+  go :: (Int, Int) -> Int
+  go (currentIndex, counted) =
+    if currentIndex < maxSize
       then
         if Bits.testBit seen currentIndex
-          then go (currentIndex - 1)
-          else 1 + (go (currentIndex - 1))
+          then go (currentIndex + 1, counted)
+          else
+            let newCount = counted + 1
+            in if newCount == unsetBitCount
+                then currentIndex
+                else go (currentIndex + 1, newCount)
       else
-        0
+        error "indexForUnsetBitCount: ran past max index"
