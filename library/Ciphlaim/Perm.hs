@@ -19,10 +19,10 @@ splitPermComposed FinSize {size = itemSize} fin =
           (\index -> FinSize {size = fromIntegral @Int @Natural (index + 1)})
       reverseCompact = splitAnd HighIndexMostSignificant sizes fin
       compact = Vector.reverse reverseCompact
-  in State.evalState (traverse (stepSplit itemSize) compact) 0
+  in State.evalState (traverse (stepSplitPerm itemSize) compact) 0
 
-stepSplit :: Natural -> Natural -> State.State Natural Int
-stepSplit elemSize compactIndex = do
+stepSplitPerm :: Natural -> Natural -> State.State Natural Int
+stepSplitPerm elemSize compactIndex = do
   seen <- State.get
   let expandedIndex =
         indexForUnsetBitCount
@@ -39,7 +39,7 @@ splitPerm elemSize@FinSize{size=elemSizeNat} fin =
       reverseCompact = splitPermCompact elemSize fin
       leftToRightCompact = Vector.reverse reverseCompact
       result :: State.State Natural (Vector Int)
-      result = traverse (stepSplit elemSizeNat) leftToRightCompact
+      result = traverse (stepSplitPerm elemSizeNat) leftToRightCompact
   in State.evalState result 0
 
 splitPermCompact :: FinSize -> Fin -> Vector Natural
@@ -108,21 +108,21 @@ createPermComposed dir = createAnd dir . createPermVector
 createPermVector :: Vector Int -> Vector Fin
 createPermVector input =
   let mappedVector :: State.State (Natural, Natural) (Vector Fin)
-      mappedVector = traverse go input
+      mappedVector = traverse stepCreatePerm input
 
       totalLength :: Natural
       totalLength = fromIntegral @_ @Natural (Vector.length input)
 
       (resultVector, (_finalValue, _finalSeen)) = State.runState mappedVector (totalLength, 0)
   in resultVector
-  where
-  go :: Int -> State.State (Natural, Natural) Fin
-  go currentValue = do
-    (valueSize, seen) <- State.get
-    let compactCurrentValue = unsetBitsBeforeIndex currentValue seen
-        newSeen = Bits.setBit seen currentValue
-    State.put (valueSize - 1, newSeen)
-    pure Fin {size=valueSize, value=compactCurrentValue}
+
+stepCreatePerm :: Int -> State.State (Natural, Natural) Fin
+stepCreatePerm currentValue = do
+  (valueSize, seen) <- State.get
+  let compactCurrentValue = unsetBitsBeforeIndex currentValue seen
+      newSeen = Bits.setBit seen currentValue
+  State.put (valueSize - 1, newSeen)
+  pure Fin {size=valueSize, value=compactCurrentValue}
 
 unsetBitsBeforeIndex :: Int -> Natural -> Natural
 unsetBitsBeforeIndex index seen = go 0
