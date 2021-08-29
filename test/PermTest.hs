@@ -142,3 +142,7 @@ permTests =
     vectorFor permAssocs \assoc@PermAssoc {fin, values} ->
       makeTest ("splitPerm " <> show assoc) do
         splitPerm (FinSize (fromIntegral @_ (Vector.length values))) fin === values
+  <> do
+    vectorFor permAssocs \assoc@PermAssoc {fin, values} ->
+      makeTest ("splitPermComposed " <> show assoc) do
+        splitPermComposed (FinSize (fromIntegral @_ (Vector.length values))) fin === values

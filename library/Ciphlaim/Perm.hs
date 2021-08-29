@@ -9,24 +9,37 @@ import Data.Vector (Vector)
 import Data.Vector qualified as Vector
 import Numeric.Natural (Natural)
 
+splitPermComposed :: FinSize -> Fin -> Vector Int
+splitPermComposed FinSize {size = itemSize} fin =
+  let itemSizeInt :: Int
+      itemSizeInt = fromIntegral itemSize
+      sizes =
+        Vector.generate
+          itemSizeInt
+          (\index -> FinSize {size = fromIntegral @Int @Natural (index + 1)})
+      reverseCompact = splitAnd HighIndexMostSignificant sizes fin
+      compact = Vector.reverse reverseCompact
+  in State.evalState (traverse (stepSplit itemSize) compact) 0
+
+stepSplit :: Natural -> Natural -> State.State Natural Int
+stepSplit elemSize compactIndex = do
+  seen <- State.get
+  let expandedIndex =
+        indexForUnsetBitCount
+          (fromIntegral @Natural @Int elemSize)
+          (fromIntegral @Natural @Int compactIndex + 1)
+          seen
+      newSeen = Bits.setBit seen expandedIndex
+  State.put newSeen
+  pure expandedIndex
+
 splitPerm :: FinSize -> Fin -> Vector Int
 splitPerm elemSize@FinSize{size=elemSizeNat} fin =
   let reverseCompact :: Vector Natural
       reverseCompact = splitPermCompact elemSize fin
       leftToRightCompact = Vector.reverse reverseCompact
-      step :: Natural -> State.State Natural Int
-      step compactIndex = do
-        seen <- State.get
-        let expandedIndex =
-              indexForUnsetBitCount
-                (fromIntegral @Natural @Int elemSizeNat)
-                (fromIntegral @Natural @Int compactIndex + 1)
-                seen
-            newSeen = Bits.setBit seen expandedIndex
-        State.put newSeen
-        pure expandedIndex
       result :: State.State Natural (Vector Int)
-      result = traverse step leftToRightCompact
+      result = traverse (stepSplit elemSizeNat) leftToRightCompact
   in State.evalState result 0
 
 splitPermCompact :: FinSize -> Fin -> Vector Natural
