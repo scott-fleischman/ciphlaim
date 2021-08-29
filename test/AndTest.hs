@@ -159,3 +159,7 @@ andTests =
     vectorFor andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
       makeTest ("splitAnd " <> show andAssoc) do
         splitAnd dir sizes fin === values
+  <> do
+    vectorFor andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
+      makeTest ("splitAndStepped " <> show andAssoc) do
+        splitAndStepped dir sizes fin === values

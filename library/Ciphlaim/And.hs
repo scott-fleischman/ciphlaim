@@ -1,8 +1,10 @@
 module Ciphlaim.And where
 
 import Ciphlaim.Fin
+import Control.Lens qualified as Lens
 import Control.Lens.Operators
 import Control.Monad.Trans.State.Strict qualified as State
+import Data.Coerce (coerce)
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
 import Data.Vector qualified as Vector
@@ -38,6 +40,23 @@ createAnd directionSignificance = directedFold foldDirection go Fin {size=1, val
     { size = currentSize * newSize,
       value = currentValue * newSize + newValue
     }
+
+stepSplitAnd :: Natural -> State.State Natural Natural
+stepSplitAnd currentSize = do
+  currentValue <- State.get
+  let (divResult, modResult) = currentValue `divMod` currentSize
+  State.put divResult
+  pure modResult
+
+splitAndStepped :: DirectionSignificance -> Vector FinSize -> Fin -> Vector Natural
+splitAndStepped dir sizes Fin {value} =
+  let sizesNatural :: Vector Natural
+      sizesNatural = coerce sizes
+      traversal =
+        case dir of
+          LowIndexMostSignificant -> Lens.reversed . traverse
+          HighIndexMostSignificant -> traverse
+  in State.evalState (traversal stepSplitAnd sizesNatural) value
 
 splitAnd :: DirectionSignificance -> Vector FinSize -> Fin -> Vector Natural
 splitAnd directionSignificance sizes input =
