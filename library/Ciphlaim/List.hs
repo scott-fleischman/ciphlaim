@@ -26,8 +26,17 @@ splitList dir inputSize@FinSize {size = itemSize} fin@Fin {size} =
   in splitAnd dir sizes fin
 
 -- Apply a list as if it were a function
-apply :: DirectionSignificance -> Fin -> Fin -> Fin
-apply dir table Fin {size, value} =
-  let tableVector = splitList dir FinSize {size} table
+apply :: FinSize -> Fin -> Fin -> Natural
+apply outputSize table Fin {value} =
+  let tableVector = splitList LowIndexMostSignificant outputSize table
       newValue = tableVector Vector.! (fromIntegral @Natural @Int value)
-  in Fin {size, value = newValue}
+  in newValue
+
+-- composeLeftFirst :: FinSize -> Fin -> Fin -> Fin
+-- composeLeftFirst
+--   leftInputSize
+--   Fin {size = leftSize, value = leftValue}
+--   Fin {size = rightSize, value = rightValue}
+--   =
+--   let 
+--   in _
