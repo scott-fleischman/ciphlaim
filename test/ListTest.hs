@@ -5,7 +5,6 @@ module ListTest where
 import Ciphlaim.And
 import Ciphlaim.List
 import Ciphlaim.Fin
-import Data.Coerce (coerce)
 import Data.String qualified as String
 import Data.Vector (Vector)
 import GHC.Generics (Generic)
@@ -115,12 +114,13 @@ listAssocs =
 applyEvenTests :: [(PropertyName, Property)]
 applyEvenTests =
   let tableValues = [1,0,1,0,1,0,1,0]
+      inputSize = fromIntegral @Int @Natural (length tableValues)
       outputSize = 2
       table = createList LowIndexMostSignificant outputSize tableValues
       boolAsNat b = if b then 1 else 0
       test :: Natural -> Property
       test value = testAsProperty do
-        apply outputSize table Fin {size = coerce outputSize, value} ===
+        apply table Fin {size = inputSize, value} ===
           boolAsNat (value `mod` 2 == 0)
   in fmap (\input -> (String.fromString ("apply even " <> show input), test input)) [0..7]
 
@@ -132,9 +132,9 @@ applyLargerOutputTests =
       table = createList LowIndexMostSignificant outputSize tableValues
   in
     [ ("applyLargerOutputTests 7", testAsProperty do
-        apply outputSize table Fin {size = inputSize, value = 0} === 7)
+        apply table Fin {size = inputSize, value = 0} === 7)
     , ("applyLargerOutputTests 100", testAsProperty do
-        apply outputSize table Fin {size = inputSize, value = 1} === 100)
+        apply table Fin {size = inputSize, value = 1} === 100)
     ]
         
 listTests :: [(PropertyName, Property)]
@@ -149,3 +149,11 @@ listTests =
         splitList dir size fin === values
   <> applyEvenTests
   <> applyLargerOutputTests
+  <>
+    let values :: Vector (Natural, Natural, Natural)
+        values = [(100, 7, 100 ^ (7 :: Natural))]
+    in vectorFor
+      values
+      \(d, p, r) ->
+        makeTest ("findNthRoot " <> show p <> " " <> show r <> " == " <> show d) do
+          findNthRoot p r === Just d

@@ -5,7 +5,9 @@ module Ciphlaim.List where
 
 import Ciphlaim.And
 import Ciphlaim.Fin
+import Control.Lens.Operators
 import Data.Generics.Labels ()
+import Data.Maybe (fromMaybe)
 import Data.Vector (Vector)
 import Data.Vector qualified as Vector
 import GHC.Exts (Int (..))
@@ -26,13 +28,26 @@ splitList dir inputSize@FinSize {size = itemSize} fin@Fin {size} =
   in splitAnd dir sizes fin
 
 -- Apply a list as if it were a function
-apply :: FinSize -> Fin -> Fin -> Natural
-apply outputSize table Fin {value} =
-  -- we could solve for outputSize, since tableSize = outputSize ^ inputSize
-  -- but this involves finding the inputSize root of the tableSize, which is not straightforward
-  let tableVector = splitList LowIndexMostSignificant outputSize table
+apply :: Fin -> Fin -> Natural
+apply table Fin {size = inputSize, value} =
+  let tableSize = table ^. #size
+      outputSize =
+        fromMaybe
+          (error $ "cannot find outputSize for tableSize=" <> show tableSize <> ", inputSize=" <> show inputSize)
+          (findNthRoot inputSize tableSize)
+      tableVector = splitList LowIndexMostSignificant FinSize {size=outputSize} table
       newValue = tableVector Vector.! (fromIntegral @Natural @Int value)
   in newValue
+
+findNthRoot :: Natural -> Natural -> Maybe Natural
+findNthRoot p r | p <= 1 || r <= 1 = Nothing
+findNthRoot p r = guess 2
+  where
+  guess d =
+    case compare (d ^ p) r of
+      LT -> guess (d + 1)
+      EQ -> Just d
+      GT -> Nothing
 
 -- composeLeftFirst :: FinSize -> Fin -> Fin -> Fin
 -- composeLeftFirst
