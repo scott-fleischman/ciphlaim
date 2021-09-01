@@ -28,6 +28,8 @@ splitList dir inputSize@FinSize {size = itemSize} fin@Fin {size} =
 -- Apply a list as if it were a function
 apply :: FinSize -> Fin -> Fin -> Natural
 apply outputSize table Fin {value} =
+  -- we could solve for outputSize, since tableSize = outputSize ^ inputSize
+  -- but this involves finding the inputSize root of the tableSize, which is not straightforward
   let tableVector = splitList LowIndexMostSignificant outputSize table
       newValue = tableVector Vector.! (fromIntegral @Natural @Int value)
   in newValue
