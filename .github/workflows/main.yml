@@ -1,0 +1,20 @@
+name: ciphlaim-build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  runhaskell:
+    name: Ciphlaim
+    runs-on: ubuntu-latest # or macOS-latest, or windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '9.0.1'
+          enable-stack: true
+          stack-version: 'latest'
+      - run: stack test
