@@ -1,4 +1,4 @@
-resolver: nightly-2021-07-18
+resolver: nightly-2021-09-02
 extra-deps:
   - generic-lens-2.2.0.0
   - generic-lens-core-2.2.0.0
