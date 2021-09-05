@@ -12,9 +12,14 @@ jobs:
     runs-on: ubuntu-latest # or macOS-latest, or windows-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.stack-work
       - uses: haskell/actions/setup@v1
         with:
           ghc-version: '9.0.1'
           enable-stack: true
           stack-version: 'latest'
+      - run: stack test --only-dependencies
       - run: stack test
