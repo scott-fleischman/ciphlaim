@@ -6,6 +6,7 @@ module Ciphlaim.List where
 import Ciphlaim.And
 import Ciphlaim.Fin
 import Control.Lens.Operators
+import Data.Functor.Identity (Identity (..))
 import Data.Generics.Labels ()
 import Data.Maybe (fromMaybe)
 import Data.Vector (Vector)
@@ -28,16 +29,23 @@ splitList dir inputSize@FinSize {size = itemSize} fin@Fin {size} =
   in splitAnd dir sizes fin
 
 -- Apply a list as if it were a function
-apply :: Fin -> Fin -> Natural
-apply table Fin {size = inputSize, value} =
+applyCalculateOutputSize :: Fin -> Fin -> Fin
+applyCalculateOutputSize table Fin {size = inputSize, value} =
   let tableSize = table ^. #size
       outputSize =
         fromMaybe
           (error $ "cannot find outputSize for tableSize=" <> show tableSize <> ", inputSize=" <> show inputSize)
           (findNthRoot inputSize tableSize)
-      tableVector = splitList LowIndexMostSignificant FinSize {size=outputSize} table
-      newValue = tableVector Vector.! (fromIntegral @Natural @Int value)
-  in newValue
+      resultValue =
+        runIdentity $
+          applyMemoryManyKnownOutputSize FinSize {size=outputSize} table
+            (Identity value)
+  in Fin {size=outputSize, value=resultValue}
+
+applyMemoryManyKnownOutputSize :: Functor f => FinSize -> Fin -> f Natural -> f Natural
+applyMemoryManyKnownOutputSize outputSize table =
+  let tableVector = splitList LowIndexMostSignificant outputSize table
+  in fmap ((tableVector Vector.!) . fromIntegral @Natural @Int)
 
 findNthRoot :: Natural -> Natural -> Maybe Natural
 findNthRoot p r | p <= 1 || r <= 1 = Nothing
