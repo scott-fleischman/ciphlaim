@@ -76,24 +76,16 @@ findIthUnsetBit targetCount size seen = go 0 0
             then go (index + 1) (count + 1)
             else error "findIthUnsetBit: targetCount not found"
 
-createPermFused :: DirectionSignificance -> Vector Int -> Fin
-createPermFused dirSig input =
-  let (result, _, _) =
-        directedFold dir go (Fin{size=1, value=0}, fromIntegral @_ @Natural inputSize, 0) input
+createPermFused :: Vector Int -> Fin
+createPermFused input =
+  let (result, _, _) = Vector.foldl' go (Fin{size=1, value=0}, fromIntegral @_ @Natural inputSize, 0) input
   in result
   where
-  dir = significanceAsDirection dirSig
   inputSize = Vector.length input
-  go :: (Fin, Natural, Natural) -> Int -> Int -> (Fin, Natural, Natural)
-  go (Fin {size=previousSize, value=previousValue}, valueSize, seen) _index currentValue =
-    let bitIndex =
-          case dir of
-            LeftToRight -> currentValue
-            RightToLeft -> (inputSize - currentValue)
-        compactCurrentValue =
-          case dir of
-            LeftToRight -> unsetBitsBeforeIndex currentValue seen
-            RightToLeft -> unsetBitsBeforeIndex bitIndex seen -- unsetBitsAfterIndex inputSize currentValue seen
+  go :: (Fin, Natural, Natural) -> Int -> (Fin, Natural, Natural)
+  go (Fin {size=previousSize, value=previousValue}, valueSize, seen) currentValue =
+    let bitIndex = currentValue
+        compactCurrentValue = unsetBitsBeforeIndex currentValue seen
         newSeen = Bits.setBit seen bitIndex
         newResult =
           Fin
@@ -102,8 +94,8 @@ createPermFused dirSig input =
             }
     in (newResult, valueSize - 1, newSeen)
 
-createPermComposed :: DirectionSignificance -> Vector Int -> Fin
-createPermComposed dir = createAnd dir . createPermVector
+createPermComposed :: Vector Int -> Fin
+createPermComposed = createAnd LowIndexMostSignificant . createPermVector
 
 createPermVector :: Vector Int -> Vector Fin
 createPermVector input =
