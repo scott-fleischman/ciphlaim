@@ -107,4 +107,4 @@ test-suite test
       -threaded
   build-depends:
       ciphlaim
-    , hedgehog
+    , hspec

@@ -120,29 +120,29 @@ permAssocs =
   -- , PermAssoc Fin {size=6, value=5} [2, 1, 0] HighIndexMostSignificant
   ]
 
-permTests :: [(PropertyName, Property)]
-permTests =
-  do
-    vectorFor permVecAssocs \permVecAssoc@PermVecAssoc {values, perms} ->
-      makeTest ("createPermVector " <> show permVecAssoc) do
-        createPermVector values === perms
-  <> do
-    vectorFor permAssocs \permAssoc@PermAssoc {fin, values, dir} ->
-      makeTest ("createPermFused " <> show permAssoc) do
-        createPermFused dir values === fin
-  <> do
-    vectorFor permAssocs \permAssoc@PermAssoc {fin, values, dir} ->
-      makeTest ("createPermComposed " <> show permAssoc) do
-        createPermComposed dir values === fin
-  <> do
-    vectorFor permVecCompactAssocs \assoc@PermVecCompactAssoc {elemSize, fin, compactIndexes} ->
-      makeTest ("splitPermCompact " <> show assoc) do
-        splitPermCompact (FinSize elemSize) fin === compactIndexes
-  <> do
-    vectorFor permAssocs \assoc@PermAssoc {fin, values} ->
-      makeTest ("splitPerm " <> show assoc) do
-        splitPerm (FinSize (fromIntegral @_ (Vector.length values))) fin === values
-  <> do
-    vectorFor permAssocs \assoc@PermAssoc {fin, values} ->
-      makeTest ("splitPermComposed " <> show assoc) do
-        splitPermComposed (FinSize (fromIntegral @_ (Vector.length values))) fin === values
+permTests :: Spec
+permTests = do
+  describe "createPermVector" do
+    Vector.forM_ permVecAssocs \permVecAssoc@PermVecAssoc {values, perms} ->
+      it ("createPermVector " <> show permVecAssoc) do
+        createPermVector values `shouldBe` perms
+  describe "createPermFused" do
+    Vector.forM_ permAssocs \permAssoc@PermAssoc {fin, values, dir} ->
+      it ("createPermFused " <> show permAssoc) do
+        createPermFused dir values `shouldBe` fin
+  describe "createPermComposed" do
+    Vector.forM_ permAssocs \permAssoc@PermAssoc {fin, values, dir} ->
+      it ("createPermComposed " <> show permAssoc) do
+        createPermComposed dir values `shouldBe` fin
+  describe "splitPermCompact" do
+    Vector.forM_ permVecCompactAssocs \assoc@PermVecCompactAssoc {elemSize, fin, compactIndexes} ->
+      it ("splitPermCompact " <> show assoc) do
+        splitPermCompact (FinSize elemSize) fin `shouldBe` compactIndexes
+  describe "splitPerm" do
+    Vector.forM_ permAssocs \assoc@PermAssoc {fin, values} ->
+      it ("splitPerm " <> show assoc) do
+        splitPerm (FinSize (fromIntegral @_ (Vector.length values))) fin `shouldBe` values
+  describe "splitPermComposed" do
+    Vector.forM_ permAssocs \assoc@PermAssoc {fin, values} ->
+      it ("splitPermComposed " <> show assoc) do
+        splitPermComposed (FinSize (fromIntegral @_ (Vector.length values))) fin `shouldBe` values

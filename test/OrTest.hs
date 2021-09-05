@@ -5,6 +5,7 @@ module OrTest where
 import Ciphlaim.Fin
 import Ciphlaim.Or
 import Data.Vector (Vector)
+import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import TestCommon
@@ -81,13 +82,13 @@ orAssocs =
     , (8, OrRef {index=0, value=3})
     ]
 
-orTests :: [(PropertyName, Property)]
-orTests =
-  do
-    vectorFor orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
-      makeTest ("createOr " <> show orAssoc) do
-        createOr dir orRef sizes === Right fin
-  <> do
-    vectorFor orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
-      makeTest ("splitOr " <> show orAssoc) do
-        splitOr dir sizes fin === Right orRef
+orTests :: Spec
+orTests = do
+  describe "createOr" do
+    Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
+      it ("createOr " <> show orAssoc) do
+        createOr dir orRef sizes `shouldBe` Right fin
+  describe "splitOr" do
+    Vector.forM_ orAssocs \orAssoc@OrAssoc {fin, orRef, sizes, dir} ->
+      it ("splitOr " <> show orAssoc) do
+        splitOr dir sizes fin `shouldBe` Right orRef

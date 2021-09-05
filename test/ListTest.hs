@@ -5,8 +5,8 @@ module ListTest where
 import Ciphlaim.And
 import Ciphlaim.List
 import Ciphlaim.Fin
-import Data.String qualified as String
 import Data.Vector (Vector)
+import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import TestCommon
@@ -111,49 +111,47 @@ listAssocs =
     , (8, [2,2])
     ]
 
-applyEvenTests :: [(PropertyName, Property)]
-applyEvenTests =
+applyEvenTests :: Spec
+applyEvenTests = describe "applyEvenTests" do
   let tableValues = [1,0,1,0,1,0,1,0]
       inputSize = fromIntegral @Int @Natural (length tableValues)
       outputSize = 2
       table = createList LowIndexMostSignificant outputSize tableValues
       boolAsNat b = if b then 1 else 0
-      test :: Natural -> Property
-      test value = testAsProperty do
-        apply table Fin {size = inputSize, value} ===
+      test :: Natural -> Spec
+      test value = it ("apply even" <> show value) do
+        apply table Fin {size = inputSize, value} `shouldBe`
           boolAsNat (value `mod` 2 == 0)
-  in fmap (\input -> (String.fromString ("apply even " <> show input), test input)) [0..7]
+  mapM_ test ([0..7] :: [Natural])
 
-applyLargerOutputTests :: [(PropertyName, Property)]
-applyLargerOutputTests =
+applyLargerOutputTests :: Spec
+applyLargerOutputTests = describe "applyLargerOutputTests" do
   let tableValues = [7, 100]
       outputSize = 1000
       inputSize = 2
       table = createList LowIndexMostSignificant outputSize tableValues
-  in
-    [ ("applyLargerOutputTests 7", testAsProperty do
-        apply table Fin {size = inputSize, value = 0} === 7)
-    , ("applyLargerOutputTests 100", testAsProperty do
-        apply table Fin {size = inputSize, value = 1} === 100)
-    ]
+  it "applyLargerOutputTests 7" do
+    apply table Fin {size = inputSize, value = 0} `shouldBe` 7
+  it "applyLargerOutputTests 100" do
+    apply table Fin {size = inputSize, value = 1} `shouldBe` 100
         
-listTests :: [(PropertyName, Property)]
-listTests =
-  do
-    vectorFor listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
-      makeTest ("createList " <> show listAssoc) do
-        createList dir size values === fin
-  <> do
-    vectorFor listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
-      makeTest ("splitList " <> show listAssoc) do
-        splitList dir size fin === values
-  <> applyEvenTests
-  <> applyLargerOutputTests
-  <>
+listTests :: Spec
+listTests = do
+  describe "createList" do
+    Vector.forM_ listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
+      it ("createList " <> show listAssoc) do
+        createList dir size values `shouldBe` fin
+  describe "splitList" do
+    Vector.forM_ listAssocs \listAssoc@ListAssoc {fin, size, values, dir} ->
+      it ("splitList " <> show listAssoc) do
+        splitList dir size fin `shouldBe` values
+  applyEvenTests
+  applyLargerOutputTests
+  describe "findNthRoot" do
     let values :: Vector (Natural, Natural, Natural)
         values = [(100, 7, 100 ^ (7 :: Natural))]
-    in vectorFor
+    Vector.forM_
       values
       \(d, p, r) ->
-        makeTest ("findNthRoot " <> show p <> " " <> show r <> " == " <> show d) do
-          findNthRoot p r === Just d
+        it ("findNthRoot " <> show p <> " " <> show r <> " == " <> show d) do
+          findNthRoot p r `shouldBe` Just d

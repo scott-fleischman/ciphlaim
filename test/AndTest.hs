@@ -6,6 +6,7 @@ import Ciphlaim.And
 import Ciphlaim.Fin
 import Data.Generics.Labels ()
 import Data.Vector (Vector)
+import Data.Vector qualified as Vector
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import TestCommon
@@ -149,17 +150,17 @@ andAssocs =
     , (29, [1,2,4])
     ]
 
-andTests :: [(PropertyName, Property)]
-andTests =
-  do
-    vectorFor andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
-      makeTest ("createAnd " <> show andAssoc) do
-        createAnd dir (zipSizesAndValues sizes values) === fin
-  <> do
-    vectorFor andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
-      makeTest ("splitAnd " <> show andAssoc) do
-        splitAnd dir sizes fin === values
-  <> do
-    vectorFor andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
-      makeTest ("splitAndStepped " <> show andAssoc) do
-        splitAndStepped dir sizes fin === values
+andTests :: Spec
+andTests = do
+  describe "createAnd" do
+    Vector.forM_ andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
+      it ("createAnd " <> show andAssoc) do
+        createAnd dir (zipSizesAndValues sizes values) `shouldBe` fin
+  describe "splitAnd" do
+    Vector.forM_ andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
+      it ("splitAnd " <> show andAssoc) do
+        splitAnd dir sizes fin `shouldBe` values
+  describe "splitAndStepped" do
+    Vector.forM_ andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
+      it ("splitAndStepped " <> show andAssoc) do
+        splitAndStepped dir sizes fin `shouldBe` values
