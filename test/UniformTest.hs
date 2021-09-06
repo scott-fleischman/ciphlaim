@@ -135,7 +135,7 @@ uniformTests = do
               combinedFinal = externalCreateListRight size3 final
           compose size1 size2 size3 combinedMap1to2 combinedMap2to3 `shouldBe` combinedFinal
 
-    describe "nested lists flattened" do
+    describe "nested lists equivalent to flattened ones" do
       forM_
         [ (2, [[]])
         , (2, [[0],[1]])
