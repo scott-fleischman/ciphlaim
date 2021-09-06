@@ -82,28 +82,39 @@ uniformTests = do
 
     describe "example table function" do
       forM_
-        [ ( []
-          , []
+        [ ( 2, []
+          , [0, 4]
+          , 5, []
           )
-        , ( [0]
+        , ( 2, [0]
+          , [0, 4]
+          , 5, [0]
+          )
+        , ( 2, [1]
+          , [0, 4]
+          , 5, [4]
+          )
+        , ( 2, [0,1]
+          , [0, 4]
+          , 5, [0,4]
+          )
+        , ( 2, [0,0,1,1,0,1]
+          , [0, 4]
+          , 5, [0,0,4,4,0,4]
+          )
+        , ( 2, [0,0,1,1,0,1]
           , [0]
+          , 1, [0,0,0,0,0,0]
           )
-        , ( [1]
-          , [4]
-          )
-        , ( [0,1]
-          , [0,4]
-          )
-        , ( [0,0,1,1,0,1]
-          , [0,0,4,4,0,4]
+        , ( 2, [0,0,1,1,0,1]
+          , [0]
+          , 1, [] -- mapping anything to size 1 collapses it to being equivalent to the empty list
           )
         ]
-        \arg@(inputItems, outputItems) -> it ("example table function: " <> show arg) do
-          let inputSize = 2
-          let outputSize = 5
+        \arg@(inputSize, inputItems, fnItems, outputSize, outputItems) -> it ("example table function: " <> show arg) do
           let inputItemCount = fromIntegral @Int @Size (length inputItems)
           let combinedInputItems = externalCreateListRight inputSize inputItems
-          let fn = externalCreateListRight outputSize [0,4]
+          let fn = externalCreateListRight outputSize fnItems
           let actual = mapTableFunction outputSize inputSize inputItemCount fn combinedInputItems
           let expected = externalCreateListRight outputSize outputItems
           when (actual /= expected) do
