@@ -50,9 +50,8 @@ externalCreateListLeft itemSize =
     0
 
 externalSplitList :: Size -> Size -> Value -> [Value]
+externalSplitList _itemSize itemCount _combinedValue | itemCount == 0 = []
 externalSplitList itemSize itemCount combinedValue =
-  if itemCount == 0
-    then []
-    else
-      let (remainingValue, itemValue) = splitAndValue (error "externalSplitList: leftSize not used") itemSize combinedValue
-      in itemValue : externalSplitList itemSize (itemCount - 1) remainingValue
+  let (remainingValue, itemValue) =
+        splitAndValue (error "externalSplitList: leftSize not used") itemSize combinedValue
+  in itemValue : externalSplitList itemSize (itemCount - 1) remainingValue
