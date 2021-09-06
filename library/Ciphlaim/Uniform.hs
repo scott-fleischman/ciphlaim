@@ -50,11 +50,7 @@ externalCreateListRight itemSize =
     0
 
 externalSplitList :: Size -> Size -> Value -> [Value]
-externalSplitList _itemSize itemCount _combinedValue | itemCount == 0 = []
-externalSplitList itemSize itemCount combinedValue =
-  let (remainingValue, itemValue) =
-        splitAndValue (error "externalSplitList: leftSize not used") itemSize combinedValue
-  in itemValue : externalSplitList itemSize (itemCount - 1) remainingValue
+externalSplitList itemSize itemCount combinedValue = externalEmbedFoldr (:) itemSize itemCount combinedValue []
 
 getItemInList :: Size -> Value -> Value -> Value
 getItemInList itemSize itemIndex combinedValue =
@@ -62,3 +58,10 @@ getItemInList itemSize itemIndex combinedValue =
       shiftRight x = x `div` (itemSizeValue ^ itemIndex)
       isolateValue x = x `mod` itemSizeValue
   in (isolateValue . shiftRight) combinedValue
+
+externalEmbedFoldr :: (Value -> b -> b) -> Size -> Size -> Value -> b -> b
+externalEmbedFoldr _f _itemSize itemCount _ initialValue | itemCount == 0 = initialValue
+externalEmbedFoldr f itemSize itemCount combinedValue initialValue =
+  let (remainingValue, itemValue) =
+        splitAndValue (error "externalFoldr: leftSize not used") itemSize combinedValue
+  in f itemValue (externalEmbedFoldr f itemSize (itemCount - 1) remainingValue initialValue)
