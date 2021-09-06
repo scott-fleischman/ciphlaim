@@ -55,6 +55,8 @@ externalSplitList itemSize itemCount combinedValue =
   externalEmbedFoldr (:) itemSize itemCount combinedValue []
 
 getItemInList :: Size -> Value -> Value -> Value
+getItemInList itemSize itemIndex combinedValue | itemSize == 0 =
+  error ("getItemInList zero: " <> show (itemSize, itemIndex, combinedValue))
 getItemInList itemSize itemIndex combinedValue =
   let itemSizeValue = sizeAsValue itemSize
       shiftRight x = x `div` (itemSizeValue ^ itemIndex)
