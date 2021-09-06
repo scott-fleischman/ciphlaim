@@ -51,7 +51,8 @@ externalCreateListRight itemSize =
     0
 
 externalSplitList :: Size -> Size -> Value -> [Value]
-externalSplitList itemSize itemCount combinedValue = externalEmbedFoldr (:) itemSize itemCount combinedValue []
+externalSplitList itemSize itemCount combinedValue =
+  externalEmbedFoldr (:) itemSize itemCount combinedValue []
 
 getItemInList :: Size -> Value -> Value -> Value
 getItemInList itemSize itemIndex combinedValue =
