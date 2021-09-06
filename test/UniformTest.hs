@@ -26,6 +26,15 @@ makeSizeValuePairs leftMaxSize rightMaxSize =
           (makeValuePairs leftSize rightSize)
   in concatMap step sizes
 
+makeAllLists :: Size -> Size -> [[Value]]
+makeAllLists itemSize itemCount | itemSize == 0 || itemCount == 0 = [[]]
+makeAllLists itemSize itemCount =
+  let items = [0..(sizeAsValue itemSize)-1]
+      smallerLists = makeAllLists itemSize (itemCount - 1)
+  in concatMap
+    (\item -> fmap (\list -> item : list) smallerLists)
+    items
+
 uniformTests :: Spec
 uniformTests = do
   describe "uniformTests" do
@@ -33,7 +42,6 @@ uniformTests = do
       it ("combineOrSize preserved with shiftOrValue: " <> show input) do
           let shiftedValue = shiftOrValue leftSize rightSize leftValue
               combinedSize = combineOrSize leftSize rightSize
-          shiftedValue `shouldSatisfy` (>= 0)
           shiftedValue `shouldSatisfy` (< (sizeAsValue combinedSize))
 
       -- 'and' checks
@@ -41,9 +49,19 @@ uniformTests = do
         let combinedValue = combineAndValue leftSize rightSize leftValue rightValue
             combinedSize = combineAndSize leftSize rightSize
         it ("combineAndSize preserved with combineAndValue: " <> show input) do
-            combinedValue `shouldSatisfy` (>= 0)
             combinedValue `shouldSatisfy` (< (sizeAsValue combinedSize))
         let (splitLeftValue, splitRightValue) = splitAndValue leftSize rightSize combinedValue
         it ("splitAndValue inverse of combineAndValue: " <> show input) do
             splitLeftValue `shouldBe` leftValue
             splitRightValue `shouldBe` rightValue
+
+    forM_ [1..4] \itemSize -> do
+      forM_ [0..3] \itemCount -> do
+        forM_ (makeAllLists itemSize itemCount) \list -> do
+          let combinedValue = externalCreateListLeft itemSize list
+          it ("create/splitList " <> show (itemSize, itemCount, list, combinedValue)) do
+            let combinedSize = listSize itemSize itemCount
+            combinedValue `shouldSatisfy` (< sizeAsValue combinedSize)
+
+            let splitValues = externalSplitList itemSize itemCount combinedValue
+            splitValues `shouldBe` list
