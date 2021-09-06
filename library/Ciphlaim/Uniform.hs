@@ -27,12 +27,12 @@ shiftOrValue :: Size -> Size -> Value -> Value
 shiftOrValue _leftSize rightSize leftValue =
   leftValue + (sizeAsValue rightSize)
 
-combineAndValue :: Size -> Size -> Value -> Value -> Value
-combineAndValue _leftSize rightSize leftValue rightValue =
+combineAndValue :: Size -> Value -> Value -> Value
+combineAndValue rightSize leftValue rightValue =
   leftValue * (sizeAsValue rightSize) + rightValue
 
-splitAndValue :: Size -> Size -> Value -> (Value, Value)
-splitAndValue _leftSize rightSize combinedValue =
+splitAndValue :: Size -> Value -> (Value, Value)
+splitAndValue rightSize combinedValue =
   combinedValue `divMod` (sizeAsValue rightSize)
 
 listSize :: Size -> Size -> Size
@@ -44,8 +44,9 @@ externalCreateListRight itemSize =
   foldr
     (\itemValue previousValue ->
       combineAndValue
-        (error "externalCreateListRight: left size should not be used") itemSize
-        previousValue itemValue
+        itemSize
+        previousValue
+        itemValue
     )
     0
 
@@ -63,5 +64,5 @@ externalEmbedFoldr :: (Value -> b -> b) -> Size -> Size -> Value -> b -> b
 externalEmbedFoldr _f _itemSize itemCount _ initialValue | itemCount == 0 = initialValue
 externalEmbedFoldr f itemSize itemCount combinedValue initialValue =
   let (remainingValue, itemValue) =
-        splitAndValue (error "externalFoldr: leftSize not used") itemSize combinedValue
+        splitAndValue itemSize combinedValue
   in f itemValue (externalEmbedFoldr f itemSize (itemCount - 1) remainingValue initialValue)

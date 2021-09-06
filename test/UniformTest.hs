@@ -46,11 +46,11 @@ uniformTests = do
 
       -- 'and' checks
       do
-        let combinedValue = combineAndValue leftSize rightSize leftValue rightValue
+        let combinedValue = combineAndValue rightSize leftValue rightValue
             combinedSize = combineAndSize leftSize rightSize
         it ("combineAndSize preserved with combineAndValue: " <> show input) do
             combinedValue `shouldSatisfy` (< (sizeAsValue combinedSize))
-        let (splitLeftValue, splitRightValue) = splitAndValue leftSize rightSize combinedValue
+        let (splitLeftValue, splitRightValue) = splitAndValue rightSize combinedValue
         it ("splitAndValue inverse of combineAndValue: " <> show input) do
             splitLeftValue `shouldBe` leftValue
             splitRightValue `shouldBe` rightValue
