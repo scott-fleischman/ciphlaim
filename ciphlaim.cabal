@@ -110,3 +110,4 @@ test-suite test
   build-depends:
       ciphlaim
     , hspec
+    , hspec-expectations

@@ -1,6 +1,6 @@
 module UniformTest where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Ciphlaim.Uniform
 import TestCommon
 import Test.Hspec (shouldSatisfy)
@@ -78,4 +78,17 @@ uniformTests = do
       it ("allValues " <> show (itemSize, allValuesValue, nums)) do
         externalSplitList itemSize itemSize allValuesValue `shouldBe` nums
       it ("mapTableFunction/allValues is identity " <> show (itemSize, allValuesValue)) do
-        mapTableFunction itemSize itemSize allValuesValue allValuesValue `shouldBe` allValuesValue
+        mapTableFunction itemSize itemSize itemSize allValuesValue allValuesValue `shouldBe` allValuesValue
+
+    it "example table function" do
+      let inputSize = 2
+      let outputSize = 5
+      let inputItems = [0,0,1,1,0,1]
+      let outputItems = [0,0,4,4,0,4]
+      let inputItemCount = fromIntegral @Int @Size (length inputItems)
+      let combinedInputItems = externalCreateListRight inputSize inputItems
+      let fn = externalCreateListRight outputSize [0,4]
+      let actual = mapTableFunction outputSize inputSize inputItemCount fn combinedInputItems
+      let expected = externalCreateListRight outputSize outputItems
+      when (actual /= expected) do
+        expectationFailure $ "example table function: " <> show (actual, fn, combinedInputItems, expected)

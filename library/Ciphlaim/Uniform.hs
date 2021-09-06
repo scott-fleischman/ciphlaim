@@ -90,10 +90,10 @@ externalAllValues size
   = error "allValues 0"
 externalAllValues size = [0..(sizeAsValue size)-1]
 
-mapTableFunction :: Size -> Size -> Value -> Value -> Value
-mapTableFunction itemSizeAsOutputSize itemCountAsInputSize listAsTableFunction combinedListOfValues =
+mapTableFunction :: Size -> Size -> Size -> Value -> Value -> Value
+mapTableFunction itemSizeAsOutputSize inputItemSize inputItemCount listAsTableFunction combinedListOfValues =
   let lookup :: Value -> Value -> Value
       lookup currentItemAsIndex previousValue =
         let newResultItemValue = getItemInList itemSizeAsOutputSize currentItemAsIndex listAsTableFunction
         in combineAndValue itemSizeAsOutputSize previousValue newResultItemValue
-  in externalEmbedFoldr lookup itemSizeAsOutputSize itemCountAsInputSize combinedListOfValues 0
+  in externalEmbedFoldr lookup inputItemSize inputItemCount combinedListOfValues 0
