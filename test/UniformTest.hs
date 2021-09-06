@@ -29,9 +29,21 @@ makeSizeValuePairs leftMaxSize rightMaxSize =
 uniformTests :: Spec
 uniformTests = do
   describe "uniformTests" do
-    forM_ (makeSizeValuePairs 3 3) \input@(leftSize, rightSize, leftValue, _rightValue) -> do
+    forM_ (makeSizeValuePairs 3 3) \input@(leftSize, rightSize, leftValue, rightValue) -> do
       it ("combineOrSize preserved with shiftOrValue: " <> show input) do
           let shiftedValue = shiftOrValue leftSize rightSize leftValue
               combinedSize = combineOrSize leftSize rightSize
           shiftedValue `shouldSatisfy` (>= 0)
           shiftedValue `shouldSatisfy` (< (sizeAsValue combinedSize))
+
+      -- 'and' checks
+      do
+        let combinedValue = combineAndValue leftSize rightSize leftValue rightValue
+            combinedSize = combineAndSize leftSize rightSize
+        it ("combineAndSize preserved with combineAndValue: " <> show input) do
+            combinedValue `shouldSatisfy` (>= 0)
+            combinedValue `shouldSatisfy` (< (sizeAsValue combinedSize))
+        let (splitLeftValue, splitRightValue) = splitAndValue leftSize rightSize combinedValue
+        it ("splitAndValue inverse of combineAndValue: " <> show input) do
+            splitLeftValue `shouldBe` leftValue
+            splitRightValue `shouldBe` rightValue
