@@ -16,6 +16,7 @@ jobs:
         with:
           path: |
             ~/.stack-work
+            .stack-work
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
