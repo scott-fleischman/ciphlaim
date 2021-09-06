@@ -135,9 +135,11 @@ uniformTests = do
 
     describe "nested lists flattened" do
       forM_
-        [ (2, [[0,1],[1,1]])
+        [ (2, [[]])
+        , (2, [[0],[1]])
+        , (2, [[1],[0],[1],[0]])
+        , (2, [[0,1],[1,1]])
         , (2, [[0,0,0],[1,1,1]])
-        , (2, [[]])
         , (3, [[0,1,2,2,1], [0,1,2,0,0], [0,0,0,1,1]])
         ]
         \input@(itemSize :: Size, nested :: [[Value]]) -> it ("nested lists flattened: " <> show input) do
