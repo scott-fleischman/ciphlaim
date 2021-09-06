@@ -20,26 +20,20 @@ significanceAsDirection :: DirectionSignificance -> FoldDirection
 significanceAsDirection LowIndexMostSignificant = LeftToRight
 significanceAsDirection HighIndexMostSignificant = RightToLeft
 
-createAnd :: DirectionSignificance -> Vector Fin -> Fin
-createAnd directionSignificance = directedFold foldDirection go Fin {size=1, value=0}
+baseAndValue :: Fin
+baseAndValue = Fin {size=1, value=0}
+
+createAndFromVector :: DirectionSignificance -> Vector Fin -> Fin
+createAndFromVector directionSignificance = directedFold foldDirection go baseAndValue
   where
   foldDirection = significanceAsDirection directionSignificance
-  go :: Fin -> Int -> Fin -> Fin
-  go
-    Fin
-    { size = currentSize,
-      value = currentValue
-    }
-    _
-    Fin
-    { size = newSize,
-      value = newValue
-    }
-    =
-    Fin
-    { size = currentSize * newSize,
-      value = currentValue * newSize + newValue
-    }
+  go previous _index item = stepAnd previous item
+
+stepAnd :: Fin -> Fin -> Fin
+stepAnd
+  Fin {size=previousSize, value=previousValue}
+  Fin {size=itemSize, value=itemValue} =
+  Fin {size=previousSize * itemSize, value=previousValue * itemSize + itemValue}
 
 stepSplitAnd :: Natural -> State.State Natural Natural
 stepSplitAnd currentSize = do

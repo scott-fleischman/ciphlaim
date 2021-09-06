@@ -95,7 +95,7 @@ createPermFused input =
     in (newResult, valueSize - 1, newSeen)
 
 createPermComposed :: Vector Int -> Fin
-createPermComposed = createAnd LowIndexMostSignificant . createPermVector
+createPermComposed = createAndFromVector LowIndexMostSignificant . createPermVector
 
 createPermVector :: Vector Int -> Vector Fin
 createPermVector input =

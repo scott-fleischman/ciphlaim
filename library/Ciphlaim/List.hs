@@ -18,7 +18,7 @@ import GHC.Natural (Natural, naturalToInteger)
 createList :: DirectionSignificance -> FinSize -> Vector Natural -> Fin
 createList dir FinSize {size} values =
   let makeFin value = Fin {size, value}
-  in createAnd dir (makeFin <$> values)
+  in createAndFromVector dir (makeFin <$> values)
 
 splitList :: DirectionSignificance -> FinSize -> Fin -> Vector Natural
 splitList _ inputSize _ | inputSize == 0 = Vector.empty -- error ?
@@ -57,6 +57,11 @@ applyDivMod FinSize {size=outputSize} Fin {value=tableValue} inputValue =
   let shiftRight x = x `div` (outputSize ^ inputValue)
       isolateValue x = x `mod` outputSize
   in (isolateValue . shiftRight) tableValue
+
+listFromVector_LowIndexMostSignificant :: FinSize -> Vector Natural -> Fin
+listFromVector_LowIndexMostSignificant FinSize {size=outputSize} =
+  Vector.foldl' stepAnd Fin {size=1, value=0}
+  . fmap (\value -> Fin {size=outputSize, value})
 
 findNthRoot :: Natural -> Natural -> Maybe Natural
 findNthRoot p r | p <= 1 || r <= 1 = Nothing

@@ -152,10 +152,10 @@ andAssocs =
 
 andTests :: Spec
 andTests = do
-  describe "createAnd" do
+  describe "createAndFromVector" do
     Vector.forM_ andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
-      it ("createAnd " <> show andAssoc) do
-        createAnd dir (zipSizesAndValues sizes values) `shouldBe` fin
+      it ("createAndFromVector " <> show andAssoc) do
+        createAndFromVector dir (zipSizesAndValues sizes values) `shouldBe` fin
   describe "splitAnd" do
     Vector.forM_ andAssocs \andAssoc@AndAssoc {fin, combo = Combo {sizes, values}, dir} ->
       it ("splitAnd " <> show andAssoc) do
