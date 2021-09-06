@@ -71,3 +71,9 @@ uniformTests = do
               (if itemCount == 0 then [] else [0..(sizeAsValue itemCount)-1])
               `shouldBe`
               list
+
+    forM_ [1..10] \itemSize -> do
+      let allValuesValue = allValues itemSize
+      it ("allValues " <> show (itemSize, allValuesValue)) do
+        let nums = [0..(sizeAsValue itemSize)-1]
+        externalSplitList itemSize itemSize allValuesValue `shouldBe` nums

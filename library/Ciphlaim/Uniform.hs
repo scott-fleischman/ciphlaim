@@ -3,6 +3,7 @@ module Ciphlaim.Uniform where
 import Data.Coerce (coerce)
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
+import Prelude hiding (lookup)
 
 newtype Size = Size { size :: Natural }
   deriving stock (Generic, Eq)
@@ -54,6 +55,8 @@ externalSplitList :: Size -> Size -> Value -> [Value]
 externalSplitList itemSize itemCount combinedValue =
   externalEmbedFoldr (:) itemSize itemCount combinedValue []
 
+-- also can be interpreted as:
+-- apply itemSizeAsOutputSize itemIndexAsInputValue combinedValueAsTableFunction
 getItemInList :: Size -> Value -> Value -> Value
 getItemInList itemSize itemIndex combinedValue
   | itemSize == 0
@@ -75,3 +78,19 @@ externalEmbedFoldr f itemSize itemCount combinedValue initialValue =
   let (remainingValue, itemValue) =
         splitAndValue itemSize combinedValue
   in f itemValue (externalEmbedFoldr f itemSize (itemCount - 1) remainingValue initialValue)
+
+-- Packs all values into a single list, combined into a single value.
+-- Also can be thought of as the identity function (as a table) for the given item size as input size.
+allValues :: Size -> Value
+allValues size
+  | size == 0
+  = error "allValues 0"
+allValues size = externalCreateListRight size [0..(sizeAsValue size)-1]
+
+mapTableFunction :: Size -> Size -> Value -> Value -> Value
+mapTableFunction itemSizeAsOutputSize itemCountAsInputSize listAsTableFunction combinedListOfValues =
+  let lookup :: Value -> Value -> Value
+      lookup currentItemAsIndex previousValue =
+        let newResultItemValue = getItemInList itemSizeAsOutputSize currentItemAsIndex listAsTableFunction
+        in combineAndValue itemSizeAsOutputSize previousValue newResultItemValue
+  in externalEmbedFoldr lookup itemSizeAsOutputSize itemCountAsInputSize combinedListOfValues 0
