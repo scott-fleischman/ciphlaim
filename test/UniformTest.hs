@@ -80,15 +80,31 @@ uniformTests = do
       it ("mapTableFunction/allValues is identity " <> show (itemSize, allValuesValue)) do
         mapTableFunction itemSize itemSize itemSize allValuesValue allValuesValue `shouldBe` allValuesValue
 
-    it "example table function" do
-      let inputSize = 2
-      let outputSize = 5
-      let inputItems = [0,0,1,1,0,1]
-      let outputItems = [0,0,4,4,0,4]
-      let inputItemCount = fromIntegral @Int @Size (length inputItems)
-      let combinedInputItems = externalCreateListRight inputSize inputItems
-      let fn = externalCreateListRight outputSize [0,4]
-      let actual = mapTableFunction outputSize inputSize inputItemCount fn combinedInputItems
-      let expected = externalCreateListRight outputSize outputItems
-      when (actual /= expected) do
-        expectationFailure $ "example table function: " <> show (actual, fn, combinedInputItems, expected)
+    describe "example table function" do
+      forM_
+        [ ( []
+          , []
+          )
+        , ( [0]
+          , [0]
+          )
+        , ( [1]
+          , [4]
+          )
+        , ( [0,1]
+          , [0,4]
+          )
+        , ( [0,0,1,1,0,1]
+          , [0,0,4,4,0,4]
+          )
+        ]
+        \arg@(inputItems, outputItems) -> it ("example table function: " <> show arg) do
+          let inputSize = 2
+          let outputSize = 5
+          let inputItemCount = fromIntegral @Int @Size (length inputItems)
+          let combinedInputItems = externalCreateListRight inputSize inputItems
+          let fn = externalCreateListRight outputSize [0,4]
+          let actual = mapTableFunction outputSize inputSize inputItemCount fn combinedInputItems
+          let expected = externalCreateListRight outputSize outputItems
+          when (actual /= expected) do
+            expectationFailure $ "example table function: " <> show (actual, fn, combinedInputItems, expected)
