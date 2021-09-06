@@ -116,7 +116,7 @@ applyEvenTests = describe "applyEvenTests" do
   let tableValues = [1,0,1,0,1,0,1,0]
       inputSize = fromIntegral @Int @Natural (length tableValues)
       outputSize = 2
-      table = createList LowIndexMostSignificant FinSize {size=outputSize} tableValues
+      table = createList HighIndexMostSignificant FinSize {size=outputSize} tableValues
       boolAsNat b = if b then 1 else 0
       test :: Natural -> Spec
       test value = it ("apply even" <> show value) do
@@ -129,7 +129,7 @@ applyLargerOutputTests = describe "applyLargerOutputTests" do
   let tableValues = [7, 100]
       outputSize = 1000
       inputSize = 2
-      table = createList LowIndexMostSignificant FinSize {size=outputSize} tableValues
+      table = createList HighIndexMostSignificant FinSize {size=outputSize} tableValues
   it "applyLargerOutputTests 7" do
     applyCalculateOutputSize table Fin {size = inputSize, value = 0} `shouldBe` Fin {size=outputSize, value=7}
   it "applyLargerOutputTests 100" do
