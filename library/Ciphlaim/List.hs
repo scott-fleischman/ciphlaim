@@ -36,7 +36,7 @@ applyCalculateOutputSize table Fin {size = inputSize, value} =
         fromMaybe
           (error $ "cannot find outputSize for tableSize=" <> show tableSize <> ", inputSize=" <> show inputSize)
           (findNthRoot inputSize tableSize)
-      resultValue = applyDivMod FinSize {size=outputSize} table value
+      resultValue = getItemAtIndex FinSize {size=outputSize} table value
       _resultValue =
         runIdentity $
           applyMemoryManyKnownOutputSize FinSize {size=outputSize} table
@@ -48,15 +48,15 @@ applyMemoryManyKnownOutputSize outputSize table =
   let tableVector = splitList LowIndexMostSignificant outputSize table
   in fmap ((tableVector Vector.!) . fromIntegral @Natural @Int)
 
--- 64 32 16  8  4  2  1
---  0  1  1  0  0  0  0
+-- 128 64 32 16  8  4  2  1
+--   0  0  1  1  0  0  0  0
 -- first: div 8 (shift right four bits)
 -- then:  mod 4 (isolate two bits)
-applyDivMod :: FinSize -> Fin -> Natural -> Natural
-applyDivMod FinSize {size=outputSize} Fin {value=tableValue} inputValue =
-  let shiftRight x = x `div` (outputSize ^ inputValue)
-      isolateValue x = x `mod` outputSize
-  in (isolateValue . shiftRight) tableValue
+getItemAtIndex :: FinSize -> Fin -> Natural -> Natural
+getItemAtIndex FinSize {size=itemSize} Fin {value=combinedItemsValue} indexValue =
+  let shiftRight x = x `div` (itemSize ^ indexValue)
+      isolateValue x = x `mod` itemSize
+  in (isolateValue . shiftRight) combinedItemsValue
 
 listFromVector_LowIndexMostSignificant :: FinSize -> Vector Natural -> Fin
 listFromVector_LowIndexMostSignificant FinSize {size=outputSize} =

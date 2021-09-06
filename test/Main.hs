@@ -5,6 +5,7 @@ import Test.Hspec qualified as Hspec
 import ListTest
 import OrTest
 import PermTest
+import UniformTest
 
 main :: IO ()
 main = Hspec.hspec do
@@ -13,3 +14,4 @@ main = Hspec.hspec do
   listTests
   orTests
   permTests
+  uniformTests
