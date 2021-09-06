@@ -97,3 +97,10 @@ mapTableFunction itemSizeAsOutputSize inputItemSize inputItemCount listAsTableFu
         let newResultItemValue = getItemInList itemSizeAsOutputSize currentItemAsIndex listAsTableFunction
         in combineAndValue itemSizeAsOutputSize previousValue newResultItemValue
   in externalEmbedFoldr lookup inputItemSize inputItemCount combinedListOfValues 0
+
+compose :: Size -> Size -> Size -> Value -> Value -> Value
+compose size1 size2 size3 map1to2 map2to3 =
+  let initial = allValues size1
+      intermediate = mapTableFunction size2 size1 size1 map1to2 initial
+      final = mapTableFunction size3 size2 size1 map2to3 intermediate
+  in final

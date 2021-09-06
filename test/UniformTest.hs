@@ -119,3 +119,16 @@ uniformTests = do
           let expected = externalCreateListRight outputSize outputItems
           when (actual /= expected) do
             expectationFailure $ "example table function: " <> show (actual, fn, combinedInputItems, expected)
+
+    describe "compose" do
+      forM_
+        [ (2, 2, 2, [0, 1], [0, 1], [0, 1])
+        , (2, 2, 2, [1, 0], [1, 0], [0, 1])
+        , (4, 4, 4, [0, 2, 1, 3], [1, 0, 3, 2], [1, 3, 0, 2])
+        , (2, 3, 4, [1, 2], [3, 2, 1], [2, 1])
+        ]
+        \input@(size1, size2, size3, map1to2, map2to3, final) -> it ("compose: " <> show input) do
+          let combinedMap1to2 = externalCreateListRight size2 map1to2
+              combinedMap2to3 = externalCreateListRight size3 map2to3
+              combinedFinal = externalCreateListRight size3 final
+          compose size1 size2 size3 combinedMap1to2 combinedMap2to3 `shouldBe` combinedFinal
