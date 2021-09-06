@@ -132,3 +132,23 @@ uniformTests = do
               combinedMap2to3 = externalCreateListRight size3 map2to3
               combinedFinal = externalCreateListRight size3 final
           compose size1 size2 size3 combinedMap1to2 combinedMap2to3 `shouldBe` combinedFinal
+
+    describe "nested lists flattened" do
+      forM_
+        [ (2, [[0,1],[1,1]])
+        , (2, [[0,0,0],[1,1,1]])
+        , (2, [[]])
+        , (3, [[0,1,2,2,1], [0,1,2,0,0], [0,0,0,1,1]])
+        ]
+        \input@(itemSize :: Size, nested :: [[Value]]) -> it ("nested lists flattened: " <> show input) do
+          let innerCombinedSize :: Size
+              innerCombinedSize = listSize itemSize (fromIntegral @Int @Size $ length $ head nested)
+          let makeInner :: [Value] -> Value
+              makeInner items = externalCreateListRight itemSize items
+          let inners :: [Value]
+              inners = fmap makeInner nested
+          let combinedOuter :: Value
+              combinedOuter = externalCreateListRight innerCombinedSize inners
+          let combinedFlattened :: Value
+              combinedFlattened = externalCreateListRight itemSize ((concat nested) :: [Value])
+          combinedOuter `shouldBe` combinedFlattened
