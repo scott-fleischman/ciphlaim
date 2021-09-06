@@ -75,5 +75,7 @@ uniformTests = do
     forM_ [1..10] \itemSize -> do
       let allValuesValue = allValues itemSize
       it ("allValues " <> show (itemSize, allValuesValue)) do
-        let nums = [0..(sizeAsValue itemSize)-1]
+        let nums = externalAllValues itemSize
         externalSplitList itemSize itemSize allValuesValue `shouldBe` nums
+      it ("mapTableFunction/allValues is identity " <> show (itemSize, allValuesValue)) do
+        mapTableFunction itemSize itemSize allValuesValue allValuesValue `shouldBe` allValuesValue

@@ -82,10 +82,13 @@ externalEmbedFoldr f itemSize itemCount combinedValue initialValue =
 -- Packs all values into a single list, combined into a single value.
 -- Also can be thought of as the identity function (as a table) for the given item size as input size.
 allValues :: Size -> Value
-allValues size
+allValues size = externalCreateListRight size (externalAllValues size)
+
+externalAllValues :: Size -> [Value]
+externalAllValues size
   | size == 0
   = error "allValues 0"
-allValues size = externalCreateListRight size [0..(sizeAsValue size)-1]
+externalAllValues size = [0..(sizeAsValue size)-1]
 
 mapTableFunction :: Size -> Size -> Value -> Value -> Value
 mapTableFunction itemSizeAsOutputSize itemCountAsInputSize listAsTableFunction combinedListOfValues =
