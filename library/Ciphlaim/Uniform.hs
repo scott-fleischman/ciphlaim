@@ -39,12 +39,12 @@ listSize :: Size -> Size -> Size
 listSize itemSize itemCount =
   itemSize ^ itemCount
 
-externalCreateListLeft :: Foldable f => Size -> f Value -> Value
-externalCreateListLeft itemSize =
+externalCreateListRight :: Foldable f => Size -> f Value -> Value
+externalCreateListRight itemSize =
   foldr
     (\itemValue previousValue ->
       combineAndValue
-        (error "externalCreateListLeft: left size should not be used") itemSize
+        (error "externalCreateListRight: left size should not be used") itemSize
         previousValue itemValue
     )
     0

@@ -58,7 +58,7 @@ uniformTests = do
     forM_ [1..4] \itemSize -> do
       forM_ [0..3] \itemCount -> do
         forM_ (makeAllLists itemSize itemCount) \list -> do
-          let combinedValue = externalCreateListLeft itemSize list
+          let combinedValue = externalCreateListRight itemSize list
           it ("create/splitList " <> show (itemSize, itemCount, list, combinedValue)) do
             let combinedSize = listSize itemSize itemCount
             combinedValue `shouldSatisfy` (< sizeAsValue combinedSize)
