@@ -65,3 +65,9 @@ uniformTests = do
 
             let splitValues = externalSplitList itemSize itemCount combinedValue
             splitValues `shouldBe` list
+
+            fmap
+              (\index -> getItemInList itemSize index combinedValue)
+              (if itemCount == 0 then [] else [0..(sizeAsValue itemCount)-1])
+              `shouldBe`
+              list

@@ -55,3 +55,10 @@ externalSplitList itemSize itemCount combinedValue =
   let (remainingValue, itemValue) =
         splitAndValue (error "externalSplitList: leftSize not used") itemSize combinedValue
   in itemValue : externalSplitList itemSize (itemCount - 1) remainingValue
+
+getItemInList :: Size -> Value -> Value -> Value
+getItemInList itemSize itemIndex combinedValue =
+  let itemSizeValue = sizeAsValue itemSize
+      shiftRight x = x `div` (itemSizeValue ^ itemIndex)
+      isolateValue x = x `mod` itemSizeValue
+  in (isolateValue . shiftRight) combinedValue
