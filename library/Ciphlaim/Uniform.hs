@@ -1,5 +1,6 @@
 module Ciphlaim.Uniform where
 
+import Control.Monad (unless)
 import Data.Coerce (coerce)
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
@@ -13,12 +14,51 @@ newtype Value = Value { value :: Natural }
   deriving stock (Generic, Eq)
   deriving newtype (Enum, Integral, Num, Ord, Real, Show)
 
+data Fin = Fin { size :: Size, value :: Value }
+  deriving stock (Generic, Eq, Show)
+
+data SplitOr = SplitOr { sizes :: [Size], valueIndex :: Int, splitValue :: Value }
+  deriving stock (Generic, Eq, Show)
+
+data SplitAnd = SplitAnd { sizes :: [Size], values :: [Value] }
+  deriving stock (Generic, Eq, Show)
+
+data SplitList = SplitList { sizes :: [Size], values :: [Value] }
+  deriving stock (Generic, Eq, Show)
+
+data Error
+  = Error_Generic String
+  | Error_Fin String Fin
+  | Error_SplitOr String SplitOr
+  deriving stock (Generic, Eq, Show)
+
 sizeAsValue :: Size -> Value
 sizeAsValue = coerce
 
 combineOrSize :: Size -> Size -> Size
 combineOrSize leftSize rightSize =
   leftSize + rightSize
+
+validateFin :: Fin -> Either Error Fin
+validateFin input@Fin {size, value} = do
+  if (value < sizeAsValue size)
+    then Right input
+    else Left (Error_Fin "value does not match size" input)
+
+validateSplitOr :: SplitOr -> Either Error SplitOr
+validateSplitOr input@SplitOr {sizes, valueIndex, splitValue} = do
+  size <- 
+    case take valueIndex sizes of
+      [] -> Left (Error_SplitOr "valueIndex greater than sizes count" input)
+      size : _ -> Right size
+  unless (splitValue < sizeAsValue size) do
+    Left (Error_SplitOr "value does not match size at index" input)
+  Right input
+
+combineOr :: SplitOr -> Either Error Fin
+combineOr input = do
+  SplitOr {sizes, valueIndex, splitValue} <- validateSplitOr input
+  error ""
 
 combineAndSize :: Size -> Size -> Size
 combineAndSize leftSize rightSize =
