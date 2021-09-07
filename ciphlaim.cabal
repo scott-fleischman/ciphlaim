@@ -74,6 +74,7 @@ library
   exposed-modules:
       Ciphlaim
       Ciphlaim.And
+      Ciphlaim.Checked
       Ciphlaim.List
       Ciphlaim.Fin
       Ciphlaim.Or
