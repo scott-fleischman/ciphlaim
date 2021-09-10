@@ -58,7 +58,11 @@ validateSplitOr input@SplitOr {sizes, valueIndex, splitValue} = do
 combineOr :: SplitOr -> Either Error Fin
 combineOr input = do
   SplitOr {sizes, valueIndex, splitValue} <- validateSplitOr input
-  error ""
+  let size = sum sizes
+      sizesToShift = take valueIndex sizes
+      combinedSizeToShift = sum sizesToShift
+      value = splitValue + (sizeAsValue combinedSizeToShift)
+  Right Fin {size, value}
 
 combineAndSize :: Size -> Size -> Size
 combineAndSize leftSize rightSize =
