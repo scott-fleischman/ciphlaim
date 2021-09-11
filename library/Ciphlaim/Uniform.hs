@@ -48,7 +48,7 @@ validateFin input@Fin {size, value} = do
 validateSplitOr :: SplitOr -> Either Error SplitOr
 validateSplitOr input@SplitOr {sizes, valueIndex, splitValue} = do
   size <- 
-    case take valueIndex sizes of
+    case drop valueIndex sizes of
       [] -> Left (Error_SplitOr "valueIndex greater than sizes count" input)
       size : _ -> Right size
   unless (splitValue < sizeAsValue size) do
@@ -62,7 +62,8 @@ combineOr input = do
       sizesToShift = take valueIndex sizes
       combinedSizeToShift = sum sizesToShift
       value = splitValue + (sizeAsValue combinedSizeToShift)
-  Right Fin {size, value}
+      result = Fin {size, value}
+  validateFin result
 
 combineAndSize :: Size -> Size -> Size
 combineAndSize leftSize rightSize =

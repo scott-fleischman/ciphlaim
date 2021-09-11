@@ -2,6 +2,7 @@ module UniformTest where
 
 import Control.Monad (forM_, when)
 import Ciphlaim.Uniform
+import Data.Either (isLeft)
 import TestCommon
 import Test.Hspec (shouldSatisfy)
 
@@ -156,3 +157,34 @@ uniformTests = do
           let combinedFlattened :: Value
               combinedFlattened = externalCreateListRight itemSize ((concat nested) :: [Value])
           combinedOuter `shouldBe` combinedFlattened
+
+    describe "SplitOr" do
+      forM_
+        [ ([1], 0, 0, 1, 0)
+        , ([1,1], 0, 0, 2, 0)
+        , ([1,1], 1, 0, 2, 1)
+        , ([0,1,0,1,0], 1, 0, 2, 0) -- zero size can be added without changing the value
+        , ([0,1,0,1,0], 3, 0, 2, 1)
+        , ([2], 0, 0, 2, 0) -- value for sizes [2] is the same as for [1,1]. values can have multiple types
+        , ([2], 0, 1, 2, 1)
+        , ([5,6,7], 0, 0, 18, 0)
+        , ([5,6,7], 1, 0, 18, 5)
+        , ([5,6,7], 2, 6, 18, 17) -- larger values come from deeper in the list
+        ]
+        \input@(sizes :: [Size], valueIndex :: Int, splitValue :: Value, resultSize :: Size, resultValue :: Value) ->
+          it ("combineOr: " <> show input) do
+            let splitOr = SplitOr sizes valueIndex splitValue
+            let resultFin = Fin resultSize resultValue
+            combineOr splitOr `shouldBe` Right resultFin
+      forM_
+        [ ([1], 0, 1) -- cannot have a value greater than the size at index
+        , ([2], 0, 99)
+        , ([1], 1, 0) -- cannot have an index greater than the size list
+        , ([1,2,3,4], 99, 0)
+        , ([], 0, 0) -- cannot create empty "or"
+        , ([0,1], 0, 0) -- cannot have a value for zero size
+        ]
+        \input@(sizes :: [Size], valueIndex :: Int, splitValue :: Value) ->
+          it ("combineOr error: " <> show input) do
+            let splitOr = SplitOr sizes valueIndex splitValue
+            combineOr splitOr `shouldSatisfy` isLeft
