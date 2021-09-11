@@ -44,7 +44,7 @@ uniformTests = do
     describe "or/and" do
       forM_ (makeSizeValuePairs 3 3) \input@(leftSize, rightSize, leftValue, rightValue) -> do
         it ("combineOrSize preserved with shiftOrValue: " <> show input) do
-            let shiftedValue = shiftOrValue leftSize rightSize leftValue
+            let shiftedValue = shiftOrValue rightSize leftValue
                 combinedSize = combineOrSize leftSize rightSize
             shiftedValue `shouldSatisfy` (< (sizeAsValue combinedSize))
 

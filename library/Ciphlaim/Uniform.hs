@@ -35,6 +35,8 @@ data Error
   | Error_Invalid_SplitOr String SplitOr
   | Error_Invalid_SplitAnd String SplitAnd [(Int, Size, Value)]
   | Error_SplitOr_FailedPrecondition String [Size] Fin
+  | Error_SplitAnd_FailedPrecondition String [Size] Fin
+  | Error_CombineOr_FailedPostcondition String SplitOr Size Fin
   | Error_CombineAnd_FailedPostcondition String SplitAnd Size Fin
   deriving stock (Generic, Eq, Show)
 
@@ -78,21 +80,39 @@ combineAnd :: SplitAnd -> Either Error Fin
 combineAnd input = do
   SplitAnd {sizes, values} <- validateSplitAnd input
   let step (itemSize, itemValue) Fin {size=previousSize, value=previousValue} =
-        Fin {size=previousSize * itemSize, value=previousValue * sizeAsValue itemSize + itemValue}
+        Fin
+          { size = combineAndSize itemSize previousSize
+          , value = combineAndValue itemSize previousValue itemValue
+          }
       result = foldr step Fin {size=1, value=0} (zip sizes values)
       expectedSize = product sizes
   unless (result ^. #size == expectedSize) do
     Left (Error_CombineAnd_FailedPostcondition "result size does not match expected product of input sizes" input expectedSize result)
   validateFin result
 
+splitAnd :: [Size] -> Fin -> Either Error SplitAnd
+splitAnd inputSizes inputFin = do
+  Fin {size=combinedSize, value=_combinedValue} <- validateFin inputFin
+  unless (product inputSizes == combinedSize) do
+    Left (Error_SplitAnd_FailedPrecondition "combined size is not product of input sizes" inputSizes inputFin)
+  undefined
+
 combineOr :: SplitOr -> Either Error Fin
 combineOr input = do
   SplitOr {sizes, valueIndex, splitValue} <- validateSplitOr input
-  let size = sum sizes
-      sizesToShift = take valueIndex sizes
-      combinedSizeToShift = sum sizesToShift
-      value = splitValue + (sizeAsValue combinedSizeToShift)
-      result = Fin {size, value}
+  let step (index, size) Fin {size=previousSize, value=previousValue} =
+        Fin
+          { size = combineOrSize size previousSize
+          , value =
+              if index < valueIndex
+                then shiftOrValue size previousValue
+                else previousValue
+          }
+      initialFin = Fin {size=0, value=splitValue} -- initally invalid by size but becomes valid applying sizes
+      result = foldr step initialFin (zip [0..] sizes)
+      expectedSize = sum sizes
+  unless (result ^. #size == expectedSize) do
+    Left (Error_CombineOr_FailedPostcondition "expected result size to be sum of sizes" input expectedSize result)
   validateFin result
 
 splitOr :: [Size] -> Fin -> Either Error SplitOr
@@ -114,8 +134,8 @@ combineAndSize :: Size -> Size -> Size
 combineAndSize leftSize rightSize =
   leftSize * rightSize
 
-shiftOrValue :: Size -> Size -> Value -> Value
-shiftOrValue _leftSize rightSize leftValue =
+shiftOrValue :: Size -> Value -> Value
+shiftOrValue rightSize leftValue =
   leftValue + (sizeAsValue rightSize)
 
 combineAndValue :: Size -> Value -> Value -> Value
