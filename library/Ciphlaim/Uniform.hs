@@ -2,6 +2,7 @@ module Ciphlaim.Uniform where
 
 import Control.Lens ((^.))
 import Control.Monad (unless)
+import Control.Monad.Trans.State.Strict qualified as State
 import Data.Coerce (coerce)
 import Data.Either qualified as Either
 import Data.Generics.Labels ()
@@ -92,10 +93,16 @@ combineAnd input = do
 
 splitAnd :: [Size] -> Fin -> Either Error SplitAnd
 splitAnd inputSizes inputFin = do
-  Fin {size=combinedSize, value=_combinedValue} <- validateFin inputFin
+  Fin {size=combinedSize, value=combinedValue} <- validateFin inputFin
   unless (product inputSizes == combinedSize) do
     Left (Error_SplitAnd_FailedPrecondition "combined size is not product of input sizes" inputSizes inputFin)
-  undefined
+  let step itemSize = do
+        remainingValue <- State.get
+        let (newRunningValue, itemValue) = splitAndValue itemSize remainingValue
+        State.put newRunningValue
+        pure itemValue
+      resultValues = State.evalState (traverse step inputSizes) combinedValue
+  validateSplitAnd SplitAnd {sizes=inputSizes, values=resultValues}
 
 combineOr :: SplitOr -> Either Error Fin
 combineOr input = do

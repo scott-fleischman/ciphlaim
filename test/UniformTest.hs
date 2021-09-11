@@ -215,8 +215,9 @@ uniformTests = do
         , (SplitAnd [1,2,1,3,1,4] [0,1,0,2,0,3], Fin 24 23)
         ]
         \input@(split :: SplitAnd, combined :: Fin) ->
-          it ("combineAnd: " <> show input) do
+          it ("combineAnd/splitAnd: " <> show input) do
             combineAnd split `shouldBe` Right combined
+            splitAnd (split ^. #sizes) combined `shouldBe` Right split
       forM_
         [ (SplitAnd [1,2] []) -- length of sizes and values do not match
         , (SplitAnd [] [1,2])
