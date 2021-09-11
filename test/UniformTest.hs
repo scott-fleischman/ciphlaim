@@ -5,8 +5,13 @@ import Control.Monad (forM_, when)
 import Ciphlaim.Uniform
 import Data.Generics.Labels ()
 import Data.Either (isLeft)
+import Prelude hiding ((^))
+import Prelude qualified
 import TestCommon
 import Test.Hspec (shouldSatisfy)
+
+(^) :: Size -> Size -> Size
+(^) = (Prelude.^)
 
 makeValuePairs :: Size -> Size -> [(Value, Value)]
 makeValuePairs leftSize rightSize | leftSize == 0 || rightSize == 0 = []
@@ -229,3 +234,28 @@ uniformTests = do
         \input ->
           it ("combineAnd error: " <> show input) do
             combineAnd input `shouldSatisfy` isLeft
+    describe "SplitList" do
+      forM_
+        [ (SplitList 1 [0], Fin 1 0) -- splitList 1 (Fin 1 0) includes a single element
+        , (SplitList 2 [0], Fin 2 0) -- preserves single-elements
+        , (SplitList 2 [1], Fin 2 1)
+        , (SplitList 3 [0], Fin 3 0)
+        , (SplitList 3 [1], Fin 3 1)
+        , (SplitList 3 [2], Fin 3 2)
+
+        -- digits are pushed to the left by multiplying
+        -- so the most significant digit is the deepest/right-most in the list
+        -- (the list item created first in the list)
+        , (SplitList 2 [0,0,0,0], Fin (2^4) 0b0000)
+        , (SplitList 2 [1,0,0,0], Fin (2^4) 0b0001)
+        , (SplitList 2 [0,1,0,0], Fin (2^4) 0b0010)
+        , (SplitList 2 [0,0,1,0], Fin (2^4) 0b0100)
+        , (SplitList 2 [0,0,0,1], Fin (2^4) 0b1000)
+        , (SplitList 2 [1,1,1,1], Fin (2^4) 0b1111)
+        , (SplitList 10 [0,1,2,3,4,5,6,7,8,9], Fin (10^10) 9876543210) 
+        , (SplitList 16 [0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF], Fin (16^16) 0xFEDCBA9876543210)
+        ]
+        \input@(split :: SplitList, combined :: Fin) ->
+          it ("combineList/splitList: " <> show input) do
+            combineList split `shouldBe` Right combined
+            splitList (split ^. #itemSize) combined `shouldBe` Right split
