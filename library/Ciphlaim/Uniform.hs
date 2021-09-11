@@ -28,8 +28,9 @@ data SplitList = SplitList { sizes :: [Size], values :: [Value] }
 
 data Error
   = Error_Generic String
-  | Error_Fin String Fin
-  | Error_SplitOr String SplitOr
+  | Error_Invalid_Fin String Fin
+  | Error_Invalid_SplitOr String SplitOr
+  | Error_SplitOr_FailedPrecondition String [Size] Fin
   deriving stock (Generic, Eq, Show)
 
 sizeAsValue :: Size -> Value
@@ -43,16 +44,16 @@ validateFin :: Fin -> Either Error Fin
 validateFin input@Fin {size, value} = do
   if (value < sizeAsValue size)
     then Right input
-    else Left (Error_Fin "value does not match size" input)
+    else Left (Error_Invalid_Fin "value does not match size" input)
 
 validateSplitOr :: SplitOr -> Either Error SplitOr
 validateSplitOr input@SplitOr {sizes, valueIndex, splitValue} = do
   size <- 
     case drop valueIndex sizes of
-      [] -> Left (Error_SplitOr "valueIndex greater than sizes count" input)
+      [] -> Left (Error_Invalid_SplitOr "valueIndex greater than sizes count" input)
       size : _ -> Right size
   unless (splitValue < sizeAsValue size) do
-    Left (Error_SplitOr "value does not match size at index" input)
+    Left (Error_Invalid_SplitOr "value does not match size at index" input)
   Right input
 
 combineOr :: SplitOr -> Either Error Fin
@@ -64,6 +65,21 @@ combineOr input = do
       value = splitValue + (sizeAsValue combinedSizeToShift)
       result = Fin {size, value}
   validateFin result
+
+splitOr :: [Size] -> Fin -> Either Error SplitOr
+splitOr splitSizes input = do
+  Fin {size = combinedSize, value = combinedValue} <- validateFin input
+  unless (sum splitSizes == combinedSize) do
+    Left (Error_SplitOr_FailedPrecondition "splitSizes do not match combined size" splitSizes input)
+  let go sizes value index =
+        case sizes of
+          [] -> Left (Error_SplitOr_FailedPrecondition "input value does not match splitSizes" splitSizes input)
+          size : remainingSizes ->
+            if value < sizeAsValue size
+              then Right (value, index)
+              else go remainingSizes (value - sizeAsValue size) (index + 1)
+  (resultValue, resultIndex) <- go splitSizes combinedValue 0
+  validateSplitOr SplitOr {sizes=splitSizes, valueIndex=resultIndex, splitValue=resultValue}
 
 combineAndSize :: Size -> Size -> Size
 combineAndSize leftSize rightSize =

@@ -1,7 +1,9 @@
 module UniformTest where
 
+import Control.Lens ((^.))
 import Control.Monad (forM_, when)
 import Ciphlaim.Uniform
+import Data.Generics.Labels ()
 import Data.Either (isLeft)
 import TestCommon
 import Test.Hspec (shouldSatisfy)
@@ -160,31 +162,37 @@ uniformTests = do
 
     describe "SplitOr" do
       forM_
-        [ ([1], 0, 0, 1, 0)
-        , ([1,1], 0, 0, 2, 0)
-        , ([1,1], 1, 0, 2, 1)
-        , ([0,1,0,1,0], 1, 0, 2, 0) -- zero size can be added without changing the value
-        , ([0,1,0,1,0], 3, 0, 2, 1)
-        , ([2], 0, 0, 2, 0) -- value for sizes [2] is the same as for [1,1]. values can have multiple types
-        , ([2], 0, 1, 2, 1)
-        , ([5,6,7], 0, 0, 18, 0)
-        , ([5,6,7], 1, 0, 18, 5)
-        , ([5,6,7], 2, 6, 18, 17) -- larger values come from deeper in the list
+        [ (SplitOr [1] 0 0, Fin 1 0)
+        , (SplitOr [1,1] 0 0, Fin 2 0)
+        , (SplitOr [1,1] 1 0, Fin 2 1)
+        , (SplitOr [0,1,0,1,0] 1 0, Fin 2 0) -- zero size can be added without changing the value
+        , (SplitOr [0,1,0,1,0] 3 0, Fin 2 1)
+        , (SplitOr [2] 0 0, Fin 2 0) -- value for sizes [2] is the same as for [1,1]. values can have multiple types
+        , (SplitOr [2] 0 1, Fin 2 1)
+        , (SplitOr [5,6,7] 0 0, Fin 18 0)
+        , (SplitOr [5,6,7] 1 0, Fin 18 5) -- larger values come from deeper in the list
+        , (SplitOr [5,6,7] 2 6, Fin 18 17)
         ]
-        \input@(sizes :: [Size], valueIndex :: Int, splitValue :: Value, resultSize :: Size, resultValue :: Value) ->
-          it ("combineOr: " <> show input) do
-            let splitOr = SplitOr sizes valueIndex splitValue
-            let resultFin = Fin resultSize resultValue
-            combineOr splitOr `shouldBe` Right resultFin
+        \input@(split :: SplitOr, combined :: Fin) ->
+          it ("combineOr/splitOr: " <> show input) do
+            combineOr split `shouldBe` Right combined
+            splitOr (split ^. #sizes) combined `shouldBe` Right split
       forM_
-        [ ([1], 0, 1) -- cannot have a value greater than the size at index
-        , ([2], 0, 99)
-        , ([1], 1, 0) -- cannot have an index greater than the size list
-        , ([1,2,3,4], 99, 0)
-        , ([], 0, 0) -- cannot create empty "or"
-        , ([0,1], 0, 0) -- cannot have a value for zero size
+        [ (SplitOr [1] 0 1) -- cannot have a value greater than the size at index
+        , (SplitOr [2] 0 99)
+        , (SplitOr [1] 1 0) -- cannot have an index greater than the size list
+        , (SplitOr [1,2,3,4] 99 0)
+        , (SplitOr [] 0 0) -- cannot create empty "or"
+        , (SplitOr [0,1] 0 0) -- cannot have a value for zero size
         ]
-        \input@(sizes :: [Size], valueIndex :: Int, splitValue :: Value) ->
+        \input ->
           it ("combineOr error: " <> show input) do
-            let splitOr = SplitOr sizes valueIndex splitValue
-            combineOr splitOr `shouldSatisfy` isLeft
+            combineOr input `shouldSatisfy` isLeft
+      forM_
+        [ ([1], Fin 2 0) -- sizes don't match combined size
+        , ([1,2,3], Fin 3 2)
+        , ([1,2,3], Fin 6 99) -- invalid fin
+        ]
+        \input@(sizes :: [Size], fin :: Fin) ->
+          it ("splitOr error: " <> show input) do
+            splitOr sizes fin `shouldSatisfy` isLeft
