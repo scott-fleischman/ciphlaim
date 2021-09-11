@@ -1,7 +1,10 @@
 module Ciphlaim.Uniform where
 
+import Control.Lens ((^.))
 import Control.Monad (unless)
 import Data.Coerce (coerce)
+import Data.Either qualified as Either
+import Data.Generics.Labels ()
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import Prelude hiding (lookup)
@@ -23,14 +26,16 @@ data SplitOr = SplitOr { sizes :: [Size], valueIndex :: Int, splitValue :: Value
 data SplitAnd = SplitAnd { sizes :: [Size], values :: [Value] }
   deriving stock (Generic, Eq, Show)
 
-data SplitList = SplitList { sizes :: [Size], values :: [Value] }
+data SplitList = SplitList { itemSize :: Size, itemCount :: Size, values :: [Value] }
   deriving stock (Generic, Eq, Show)
 
 data Error
   = Error_Generic String
   | Error_Invalid_Fin String Fin
   | Error_Invalid_SplitOr String SplitOr
+  | Error_Invalid_SplitAnd String SplitAnd [(Int, Size, Value)]
   | Error_SplitOr_FailedPrecondition String [Size] Fin
+  | Error_CombineAnd_FailedPostcondition String SplitAnd Size Fin
   deriving stock (Generic, Eq, Show)
 
 sizeAsValue :: Size -> Value
@@ -55,6 +60,30 @@ validateSplitOr input@SplitOr {sizes, valueIndex, splitValue} = do
   unless (splitValue < sizeAsValue size) do
     Left (Error_Invalid_SplitOr "value does not match size at index" input)
   Right input
+
+validateSplitAnd :: SplitAnd -> Either Error SplitAnd
+validateSplitAnd input@SplitAnd {sizes, values} = do
+  let check (index, size, value) =
+        if value < sizeAsValue size
+          then Right ()
+          else Left (index, size, value)
+      errors = Either.lefts (check <$> zip3 [0..] sizes values)
+  unless (length sizes == length values) do
+    Left (Error_Invalid_SplitAnd "length of sizes does not match length of values" input errors)
+  case errors of
+    [] -> Right input
+    _ : _ -> Left (Error_Invalid_SplitAnd "values do not match sizes" input errors)
+
+combineAnd :: SplitAnd -> Either Error Fin
+combineAnd input = do
+  SplitAnd {sizes, values} <- validateSplitAnd input
+  let step (itemSize, itemValue) Fin {size=previousSize, value=previousValue} =
+        Fin {size=previousSize * itemSize, value=previousValue * sizeAsValue itemSize + itemValue}
+      result = foldr step Fin {size=1, value=0} (zip sizes values)
+      expectedSize = product sizes
+  unless (result ^. #size == expectedSize) do
+    Left (Error_CombineAnd_FailedPostcondition "result size does not match expected product of input sizes" input expectedSize result)
+  validateFin result
 
 combineOr :: SplitOr -> Either Error Fin
 combineOr input = do

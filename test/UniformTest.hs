@@ -196,3 +196,35 @@ uniformTests = do
         \input@(sizes :: [Size], fin :: Fin) ->
           it ("splitOr error: " <> show input) do
             splitOr sizes fin `shouldSatisfy` isLeft
+    describe "SplitAnd" do
+      forM_
+        [ (SplitAnd [] [], Fin 1 0) -- there is a base case
+        , (SplitAnd [1] [0], Fin 1 0) -- sizes of one do not affect result value
+        , (SplitAnd [1,1,1] [0,0,0], Fin 1 0)
+        , (SplitAnd [2] [0], Fin 2 0) -- single size preserves size, value
+        , (SplitAnd [2] [1], Fin 2 1)
+        , (SplitAnd [2,3] [0,0], Fin 6 0) -- head of list is least significant in result value
+        , (SplitAnd [2,3] [1,0], Fin 6 1)
+        , (SplitAnd [2,3] [0,1], Fin 6 2)
+        , (SplitAnd [2,3] [1,1], Fin 6 3)
+        , (SplitAnd [2,3] [0,2], Fin 6 4)
+        , (SplitAnd [2,3] [1,2], Fin 6 5)
+        , (SplitAnd [2,3,4] [0,0,0], Fin 24 0)
+        , (SplitAnd [2,3,4] [1,2,3], Fin 24 23)
+        , (SplitAnd [1,2,1,3,1,4] [0,0,0,0,0,0], Fin 24 0)
+        , (SplitAnd [1,2,1,3,1,4] [0,1,0,2,0,3], Fin 24 23)
+        ]
+        \input@(split :: SplitAnd, combined :: Fin) ->
+          it ("combineAnd: " <> show input) do
+            combineAnd split `shouldBe` Right combined
+      forM_
+        [ (SplitAnd [1,2] []) -- length of sizes and values do not match
+        , (SplitAnd [] [1,2])
+        , (SplitAnd [2,3,4] [5,0,0]) -- value exceeds size
+        , (SplitAnd [2,3,4] [0,5,0])
+        , (SplitAnd [2,3,4] [0,0,5])
+        , (SplitAnd [0] [0]) -- cannot use zero
+        ]
+        \input ->
+          it ("combineAnd error: " <> show input) do
+            combineAnd input `shouldSatisfy` isLeft
