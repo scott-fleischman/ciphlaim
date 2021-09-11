@@ -27,7 +27,7 @@ data SplitOr = SplitOr { sizes :: [Size], valueIndex :: Int, splitValue :: Value
 data SplitAnd = SplitAnd { sizes :: [Size], values :: [Value] }
   deriving stock (Generic, Eq, Show)
 
-data SplitList = SplitList { itemSize :: Size, itemCount :: Size, values :: [Value] }
+data SplitList = SplitList { itemSize :: Size, values :: [Value] }
   deriving stock (Generic, Eq, Show)
 
 data Error
@@ -37,6 +37,7 @@ data Error
   | Error_Invalid_SplitAnd String SplitAnd [(Int, Size, Value)]
   | Error_SplitOr_FailedPrecondition String [Size] Fin
   | Error_SplitAnd_FailedPrecondition String [Size] Fin
+  | Error_SplitList_FailedPrecondition String Size Fin Int
   | Error_CombineOr_FailedPostcondition String SplitOr Size Fin
   | Error_CombineAnd_FailedPostcondition String SplitAnd Size Fin
   deriving stock (Generic, Eq, Show)
@@ -76,6 +77,15 @@ validateSplitAnd input@SplitAnd {sizes, values} = do
   case errors of
     [] -> Right input
     _ : _ -> Left (Error_Invalid_SplitAnd "values do not match sizes" input errors)
+
+splitListToSplitAnd :: SplitList -> SplitAnd
+splitListToSplitAnd SplitList {itemSize, values}=
+  SplitAnd {sizes=const itemSize <$> values, values}
+
+validateSplitList :: SplitList -> Either Error SplitList
+validateSplitList input = do
+  _ <- validateSplitAnd (splitListToSplitAnd input)
+  Right input
 
 combineAnd :: SplitAnd -> Either Error Fin
 combineAnd input = do
@@ -156,6 +166,32 @@ splitAndValue rightSize combinedValue =
 listSize :: Size -> Size -> Size
 listSize itemSize itemCount =
   itemSize ^ itemCount
+
+combineList :: SplitList -> Either Error Fin
+combineList input = combineAnd (splitListToSplitAnd input)
+
+splitList :: Size -> Fin -> Either Error SplitList
+splitList itemSize combinedInput = do
+  _ <- validateFin combinedInput
+  let go index Fin {size=currentSize, value=currentValue} = do
+        let (remainingValue, itemValue) = splitAndValue itemSize currentValue
+        let itemFin = Fin {size=itemSize, value=itemValue}
+        unless (Either.isRight $ validateFin itemFin) do
+          Left (Error_SplitList_FailedPrecondition ("item value at index exceeds size: " <> show itemValue) itemSize combinedInput index)
+        let (remainingSize, sizeMod) = currentSize `divMod` itemSize
+        unless (sizeMod == 0) do
+          Left (Error_SplitList_FailedPrecondition "size not divisible by item size at index" itemSize combinedInput index)
+        let nextFin = Fin {size=remainingSize, value=remainingValue}
+        unless (Either.isRight $ validateFin nextFin) do
+          Left (Error_SplitList_FailedPrecondition ("remaining value at index not valid fin: " <> show nextFin) itemSize combinedInput index)
+        moreValues <-
+          if remainingSize > 1
+            then go (index + 1) nextFin
+            else Right []
+        Right (itemValue : moreValues)
+  values <- go 0 combinedInput
+  let result = SplitList {itemSize, values}
+  validateSplitList result
 
 externalCreateListRight :: Foldable f => Size -> f Value -> Value
 externalCreateListRight itemSize =
