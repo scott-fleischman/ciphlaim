@@ -218,7 +218,12 @@ getItemInList itemSize itemIndex combinedValue =
   let itemSizeValue = sizeAsValue itemSize
       shiftRight x = x `div` (itemSizeValue ^ itemIndex)
       isolateValue x = x `mod` itemSizeValue
-  in (isolateValue . shiftRight) combinedValue
+      resultValue = (isolateValue . shiftRight) combinedValue
+  in
+    if resultValue >= itemSizeValue
+      then error $ "getItemInList postcondition failure: result is larger than itemSize: "
+        <> show (resultValue, itemSize, itemIndex, combinedValue)
+      else resultValue
 
 externalEmbedFoldr :: (Value -> b -> b) -> Size -> Size -> Value -> b -> b
 externalEmbedFoldr _f itemSize itemCount combinedValue _initialValue
