@@ -30,17 +30,20 @@ data SplitAnd = SplitAnd { sizes :: [Size], values :: [Value] }
 data SplitList = SplitList { itemSize :: Size, values :: [Value] }
   deriving stock (Generic, Eq, Show)
 
+data Info
+  = forall a. Show a =>
+  Info
+  { name :: String
+  , value :: a
+  }
+deriving instance Show Info
+
 data Error
-  = Error_Generic String
-  | Error_Invalid_Fin String Fin
-  | Error_Invalid_SplitOr String SplitOr
-  | Error_Invalid_SplitAnd String SplitAnd [(Int, Size, Value)]
-  | Error_SplitOr_FailedPrecondition String [Size] Fin
-  | Error_SplitAnd_FailedPrecondition String [Size] Fin
-  | Error_SplitList_FailedPrecondition String Size Fin Int
-  | Error_CombineOr_FailedPostcondition String SplitOr Size Fin
-  | Error_CombineAnd_FailedPostcondition String SplitAnd Size Fin
-  deriving stock (Generic, Eq, Show)
+  = Error
+  { message :: String
+  , infos :: [Info]
+  }
+  deriving Show
 
 sizeAsValue :: Size -> Value
 sizeAsValue = coerce
@@ -53,16 +56,16 @@ validateFin :: Fin -> Either Error Fin
 validateFin input@Fin {size, value} = do
   if (value < sizeAsValue size)
     then Right input
-    else Left (Error_Invalid_Fin "value does not match size" input)
+    else Left (Error "validateFin: value does not match size" [Info "input" input])
 
 validateSplitOr :: SplitOr -> Either Error SplitOr
 validateSplitOr input@SplitOr {sizes, valueIndex, splitValue} = do
   size <- 
     case drop valueIndex sizes of
-      [] -> Left (Error_Invalid_SplitOr "valueIndex greater than sizes count" input)
+      [] -> Left $ Error "Invalid_SplitOr: valueIndex greater than sizes count" [Info "input" input]
       size : _ -> Right size
   unless (splitValue < sizeAsValue size) do
-    Left (Error_Invalid_SplitOr "value does not match size at index" input)
+    Left $ Error "Invalid_SplitOr: value does not match size at index" [Info "input" input]
   Right input
 
 validateSplitAnd :: SplitAnd -> Either Error SplitAnd
@@ -71,12 +74,16 @@ validateSplitAnd input@SplitAnd {sizes, values} = do
         if value < sizeAsValue size
           then Right ()
           else Left (index, size, value)
+      errors :: [(Natural, Size, Value)]
       errors = Either.lefts (check <$> zip3 [0..] sizes values)
   unless (length sizes == length values) do
-    Left (Error_Invalid_SplitAnd "length of sizes does not match length of values" input errors)
+    Left $
+      Error "Invalid_SplitAnd: length of sizes does not match length of values"
+        [Info "input" input, Info "errors" errors]
   case errors of
     [] -> Right input
-    _ : _ -> Left (Error_Invalid_SplitAnd "values do not match sizes" input errors)
+    _ : _ -> Left $ Error "Invalid_SplitAnd: values do not match sizes"
+      [Info "input" input, Info "errors" errors]
 
 splitListToSplitAnd :: SplitList -> SplitAnd
 splitListToSplitAnd SplitList {itemSize, values}=
@@ -98,14 +105,19 @@ combineAnd input = do
       result = foldr step Fin {size=1, value=0} (zip sizes values)
       expectedSize = product sizes
   unless (result ^. #size == expectedSize) do
-    Left (Error_CombineAnd_FailedPostcondition "result size does not match expected product of input sizes" input expectedSize result)
+    Left $
+      Error
+        "CombineAnd_FailedPostcondition: result size does not match expected product of input sizes"
+        [Info "input" input, Info "expectedSize" expectedSize, Info "result" result]
   validateFin result
 
 splitAnd :: [Size] -> Fin -> Either Error SplitAnd
 splitAnd inputSizes inputFin = do
   Fin {size=combinedSize, value=combinedValue} <- validateFin inputFin
   unless (product inputSizes == combinedSize) do
-    Left (Error_SplitAnd_FailedPrecondition "combined size is not product of input sizes" inputSizes inputFin)
+    Left $
+      Error "SplitAnd_FailedPrecondition combined size is not product of input sizes"
+        [Info "inputSizes" inputSizes, Info "inputFin" inputFin]
   let step itemSize = do
         remainingValue <- State.get
         let (newRunningValue, itemValue) = splitAndValue itemSize remainingValue
@@ -129,17 +141,23 @@ combineOr input = do
       result = foldr step initialFin (zip [0..] sizes)
       expectedSize = sum sizes
   unless (result ^. #size == expectedSize) do
-    Left (Error_CombineOr_FailedPostcondition "expected result size to be sum of sizes" input expectedSize result)
+    Left $
+      Error "CombineOr_FailedPostcondition expected result size to be sum of sizes"
+        [Info "input" input, Info "expectedSize" expectedSize, Info "result" result]
   validateFin result
 
 splitOr :: [Size] -> Fin -> Either Error SplitOr
 splitOr splitSizes input = do
   Fin {size = combinedSize, value = combinedValue} <- validateFin input
   unless (sum splitSizes == combinedSize) do
-    Left (Error_SplitOr_FailedPrecondition "splitSizes do not match combined size" splitSizes input)
+    Left $
+      Error "SplitOr_FailedPrecondition splitSizes do not match combined size"
+        [Info "splitSizes" splitSizes, Info "input" input]
   let go sizes value index =
         case sizes of
-          [] -> Left (Error_SplitOr_FailedPrecondition "input value does not match splitSizes" splitSizes input)
+          [] -> Left $
+            Error "SplitOr_FailedPrecondition input value does not match splitSizes"
+              [Info "splitSizes" splitSizes, Info "input" input]
           size : remainingSizes ->
             if value < sizeAsValue size
               then Right (value, index)
@@ -173,17 +191,24 @@ combineList input = combineAnd (splitListToSplitAnd input)
 splitList :: Size -> Fin -> Either Error SplitList
 splitList itemSize combinedInput = do
   _ <- validateFin combinedInput
-  let go index Fin {size=currentSize, value=currentValue} = do
+  let go :: Natural -> Fin -> Either Error [Value]
+      go index Fin {size=currentSize, value=currentValue} = do
         let (remainingValue, itemValue) = splitAndValue itemSize currentValue
         let itemFin = Fin {size=itemSize, value=itemValue}
         unless (Either.isRight $ validateFin itemFin) do
-          Left (Error_SplitList_FailedPrecondition ("item value at index exceeds size: " <> show itemValue) itemSize combinedInput index)
+          Left
+            $ Error "SplitList_FailedPrecondition item value at index exceeds size"
+              [Info "itemValue" itemValue, Info "itemSize" itemSize, Info "combinedInput" combinedInput, Info "index" index]
         let (remainingSize, sizeMod) = currentSize `divMod` itemSize
         unless (sizeMod == 0) do
-          Left (Error_SplitList_FailedPrecondition "size not divisible by item size at index" itemSize combinedInput index)
+          Left $
+            Error "SplitList_FailedPrecondition size not divisible by item size at index"
+              [Info "itemSize" itemSize, Info "combinedInput" combinedInput, Info "index" index]
         let nextFin = Fin {size=remainingSize, value=remainingValue}
         unless (Either.isRight $ validateFin nextFin) do
-          Left (Error_SplitList_FailedPrecondition ("remaining value at index not valid fin: " <> show nextFin) itemSize combinedInput index)
+          Left $
+            Error "SplitList_FailedPrecondition remaining value at index not valid fin"
+              [Info "nextFin" nextFin, Info "itemSize" itemSize, Info "combinedInput" combinedInput, Info "index" index]
         moreValues <-
           if remainingSize > 1
             then go (index + 1) nextFin

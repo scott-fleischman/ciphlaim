@@ -180,8 +180,8 @@ uniformTests = do
         ]
         \input@(split :: SplitOr, combined :: Fin) ->
           it ("combineOr/splitOr: " <> show input) do
-            combineOr split `shouldBe` Right combined
-            splitOr (split ^. #sizes) combined `shouldBe` Right split
+            combineOr split `shouldBeRight` combined
+            splitOr (split ^. #sizes) combined `shouldBeRight` split
       forM_
         [ (SplitOr [1] 0 1) -- cannot have a value greater than the size at index
         , (SplitOr [2] 0 99)
@@ -221,8 +221,8 @@ uniformTests = do
         ]
         \input@(split :: SplitAnd, combined :: Fin) ->
           it ("combineAnd/splitAnd: " <> show input) do
-            combineAnd split `shouldBe` Right combined
-            splitAnd (split ^. #sizes) combined `shouldBe` Right split
+            combineAnd split `shouldBeRight` combined
+            splitAnd (split ^. #sizes) combined `shouldBeRight` split
       forM_
         [ (SplitAnd [1,2] []) -- length of sizes and values do not match
         , (SplitAnd [] [1,2])
@@ -257,5 +257,5 @@ uniformTests = do
         ]
         \input@(split :: SplitList, combined :: Fin) ->
           it ("combineList/splitList: " <> show input) do
-            combineList split `shouldBe` Right combined
-            splitList (split ^. #itemSize) combined `shouldBe` Right split
+            combineList split `shouldBeRight` combined
+            splitList (split ^. #itemSize) combined `shouldBeRight` split
