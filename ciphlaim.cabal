@@ -13,6 +13,7 @@ common options
     , bytestring
     , containers
     , generic-lens
+    , integer-gmp
     , lens
     , text
     , transformers
